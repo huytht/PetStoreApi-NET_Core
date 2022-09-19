@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PetStoreApi.Helpers;
+using PetStoreApi.Services.Repositories;
+using PetStoreApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,16 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddScoped<ModelValidationAttribute>();
 builder.Logging.AddJsonConsole();
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
+#region Repositories
+builder.Services.AddScoped<IBreedRepository, BreedRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IOriginRepository, OriginRepository>();
+builder.Services.AddScoped<IFileRepository, FileRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+#endregion
 
 var app = builder.Build();
 

@@ -1,0 +1,39 @@
+﻿using Microsoft.EntityFrameworkCore;
+using PetStoreApi.Data.Entity;
+using PetStoreApi.DTO.BreedDTO;
+using PetStoreApi.Helpers;
+
+namespace PetStoreApi.Services.Repositories
+{
+    public class OriginRepository : IOriginRepository
+    {
+        private readonly DataContext _context;
+
+        public OriginRepository(DataContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Origin> GetOrigin(int? id)
+        {
+            try
+            {
+                var origin = await _context.Origins.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+                if (origin != null)
+                {
+                    return new Origin
+                    {
+                        Id = origin.Id,
+                        Name = origin.Name,
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+            return null;
+        }
+    }
+}
