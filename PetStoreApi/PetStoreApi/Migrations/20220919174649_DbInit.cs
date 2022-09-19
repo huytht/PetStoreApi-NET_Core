@@ -54,7 +54,7 @@ namespace PetStoreApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Origins",
+                name: "Origin",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -63,7 +63,7 @@ namespace PetStoreApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Origins", x => x.Id);
+                    table.PrimaryKey("PK_Origin", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -73,9 +73,9 @@ namespace PetStoreApi.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AmountInStock = table.Column<int>(type: "int", nullable: false),
-                    Age = table.Column<int>(type: "int", nullable: false),
+                    Age = table.Column<int>(type: "int", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Gender = table.Column<bool>(type: "bit", nullable: false),
+                    Gender = table.Column<bool>(type: "bit", nullable: true),
                     Status = table.Column<bool>(type: "bit", nullable: false),
                     Price = table.Column<double>(type: "float", nullable: false),
                     Rate = table.Column<int>(type: "int", nullable: false),
@@ -157,7 +157,7 @@ namespace PetStoreApi.Migrations
                     table.ForeignKey(
                         name: "FK_ProductOrigin_Origin",
                         column: x => x.OriginId,
-                        principalTable: "Origins",
+                        principalTable: "Origin",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -209,7 +209,7 @@ namespace PetStoreApi.Migrations
                 name: "Order");
 
             migrationBuilder.DropTable(
-                name: "Origins");
+                name: "Origin");
 
             migrationBuilder.DropTable(
                 name: "Product");

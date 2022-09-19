@@ -12,8 +12,8 @@ using PetStoreApi.Helpers;
 namespace PetStoreApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220918114221_DbInit")]
-    partial class DbInit
+    [Migration("20220919174941_UpdateSchema")]
+    partial class UpdateSchema
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -50,7 +50,6 @@ namespace PetStoreApi.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -132,7 +131,7 @@ namespace PetStoreApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Origins");
+                    b.ToTable("Origin", (string)null);
                 });
 
             modelBuilder.Entity("PetStoreApi.Data.Entity.Product", b =>
@@ -141,7 +140,7 @@ namespace PetStoreApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Age")
+                    b.Property<int?>("Age")
                         .HasColumnType("int");
 
                     b.Property<int>("AmountInStock")
@@ -158,7 +157,7 @@ namespace PetStoreApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Gender")
+                    b.Property<bool?>("Gender")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
