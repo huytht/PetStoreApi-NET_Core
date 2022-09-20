@@ -5,6 +5,6 @@ namespace PetStoreApi.Services
 {
     public interface IOriginRepository
     {
-        Task<Origin> GetOrigin(int? id);
+        Origin GetOrigin(int? id);
     }
 }

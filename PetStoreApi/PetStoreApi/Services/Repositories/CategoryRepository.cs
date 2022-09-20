@@ -13,11 +13,11 @@ namespace PetStoreApi.Services.Repositories
             _context = context;
         }
 
-        public async Task<Category> GetCategory(int? id)
+        public Category GetCategory(int? id)
         {
             try
             {
-                var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+                var category = _context.Categories.AsNoTracking().FirstOrDefault(c => c.Id == id);
                 if (category != null)
                 {
                     return new Category

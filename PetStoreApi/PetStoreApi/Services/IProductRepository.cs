@@ -6,10 +6,10 @@ namespace PetStoreApi.Services
 {
     public interface IProductRepository
     {
-        //IEnumerable<Product> GetDogList();
-        //IEnumerable<Product> GetCatList();
+        AppServiceResult<List<ProductShortDto>> GetDogList();
+        AppServiceResult<List<ProductShortDto>> GetCatList();
         //IEnumerable<Product> GetProductList();
         //Product GetProductById(int id);
-        Task<AppServiceResult<ProductDto>> AddProduct(ProductCreateDto product);
+        AppServiceResult<Product> AddProduct(ProductCreateDto product);
     }
 }

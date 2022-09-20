@@ -5,6 +5,6 @@ namespace PetStoreApi.Services
 {
     public interface IBreedRepository
     {
-        Task<Breed> GetBreed(int? id);
+        Breed GetBreed(int? id);
     }
 }

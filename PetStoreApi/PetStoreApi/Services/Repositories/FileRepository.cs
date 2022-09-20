@@ -17,7 +17,7 @@ namespace PetStoreApi.Services.Repositories
 			try
 			{
 				FileInfo fileInfo = new FileInfo(file.FileName);
-				var newFileName = HelperFunction.normalizeUri(file.FileName) + "-" + DateTime.Now.TimeOfDay.Milliseconds + fileInfo.Extension;
+				var newFileName = HelperFunction.normalizeUri(fileName) + "-" + DateTime.Now.TimeOfDay.Milliseconds + fileInfo.Extension;
 				var path = Path.Combine("", _hostingEnvironment.ContentRootPath + "/Images/" + newFileName);
 				using (var stream = new FileStream(path, FileMode.Create))
 				{

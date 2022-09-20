@@ -14,11 +14,11 @@ namespace PetStoreApi.Services.Repositories
             _context = context;
         }
 
-        public async Task<Origin> GetOrigin(int? id)
+        public Origin GetOrigin(int? id)
         {
             try
             {
-                var origin = await _context.Origins.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+                var origin = _context.Origins.AsNoTracking().FirstOrDefault(b => b.Id == id);
                 if (origin != null)
                 {
                     return new Origin

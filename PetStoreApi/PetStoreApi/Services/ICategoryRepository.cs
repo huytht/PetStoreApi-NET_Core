@@ -5,6 +5,6 @@ namespace PetStoreApi.Services
 {
     public interface ICategoryRepository
     {
-        Task<Category> GetCategory(int? id);
+        Category GetCategory(int? id);
     }
 }

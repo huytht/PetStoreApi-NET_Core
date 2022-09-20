@@ -14,11 +14,12 @@ namespace PetStoreApi.Services.Repositories
             _context = context;
         }
 
-        public async Task<Breed> GetBreed(int? id)
+        public Breed GetBreed(int? id)
         {
             try
             {
-                var breed = await _context.Breeds.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+                Breed? breed = _context.Breeds.AsNoTracking().FirstOrDefault(b => b.Id == id);
+                Console.WriteLine("===========================>" + breed.ToString());
                 if (breed != null)
                 {
                     return new Breed
@@ -30,7 +31,6 @@ namespace PetStoreApi.Services.Repositories
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
                 return null;
             }
             return null;

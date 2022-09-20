@@ -5,6 +5,9 @@ using PetStoreApi.DTO.ProductDTO;
 using PetStoreApi.Domain;
 using PetStoreApi.Helpers;
 using System.Collections;
+using System.Collections.Immutable;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -32,15 +35,16 @@ namespace PetStoreApi.Services.Repositories
             _originRepository = originRepository;
         }
 
-        public async Task<AppServiceResult<ProductDto>> AddProduct(ProductCreateDto product)
+        public AppServiceResult<Product> AddProduct(ProductCreateDto product)
         {
             try
             {
                 Product newProduct = new Product();
+                newProduct.Id = Guid.NewGuid();
                 newProduct.Name = product.Name;
                 if (product.BreedId != null)
                 {
-                    Breed breed = await _breedRepository.GetBreed(product.BreedId);
+                    Breed breed = _breedRepository.GetBreed(product.BreedId);
 
                     if (breed != null)
                     {
@@ -53,7 +57,7 @@ namespace PetStoreApi.Services.Repositories
                 }
                 if (product.CategoryId != null)
                 {
-                    Category category = await _categoryRepository.GetCategory(product.CategoryId);
+                    Category category = _categoryRepository.GetCategory(product.CategoryId);
 
                     if (category != null)
                     {
@@ -69,12 +73,12 @@ namespace PetStoreApi.Services.Repositories
                 {
                     foreach (var originId in product.OriginIds)
                     {
-                        Origin origin = await _originRepository.GetOrigin(originId);
+                        Origin origin = _originRepository.GetOrigin(originId);
 
                         if (origin != null)
                         {
                             ProductOrigin productOrigin = new ProductOrigin();
-                            productOrigin.Product = newProduct;
+                            productOrigin.ProductId = newProduct.Id;
                             productOrigin.OriginId = origin.Id;
                             newProduct.ProductOrigins.Add(productOrigin);
                         }
@@ -84,7 +88,6 @@ namespace PetStoreApi.Services.Repositories
                             return null;
                         }
                     }
-                   
                 }
                 if (product.Gender != null)
                 {
@@ -109,18 +112,65 @@ namespace PetStoreApi.Services.Repositories
                         newProduct.ProductImages.Add(productImage);
                     }
                 }
-                Console.WriteLine("===================>"+newProduct.ToString());
                 _context.Add(newProduct);
-                await _context.SaveChangesAsync();
+                _context.SaveChanges();
 
-                ProductDto dto = ProductDto.CreateFromEntity(newProduct);
+                //ProductDto dto = ProductDto.CreateFromEntity(newProduct);
 
-                return new AppServiceResult<ProductDto>(true, 0, "Succeed!", dto);
+                return new AppServiceResult<Product>(true, 0, "Succeed!", newProduct);
             }
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                return new AppServiceResult<ProductDto>(false, 99, "Unknown error", null);
+                return new AppServiceResult<Product>(false, 99, "Unknown error", null);
+            }
+        }
+
+        public AppServiceResult<List<ProductShortDto>> GetCatList()
+        {
+            try
+            {
+                var list = _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("mèo"));
+                foreach(var p in list)
+                {
+                    var productImageList = _context.ProductImages.Select(productImage => productImage).Where(productImage => productImage.ProductId == p.Id);
+                    foreach (var image in productImageList)
+                    {
+                        p.ProductImages.Add(image);
+                    }
+                }
+                var resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+                
+                return new AppServiceResult<List<ProductShortDto>>(true, 0, "Succeed!", resultList.ToList());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<List<ProductShortDto>>(false, 99, "Unknown error", null);
+            }
+        }
+
+        public AppServiceResult<List<ProductShortDto>> GetDogList()
+        {
+            try
+            {
+                var list = _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("chó"));
+                foreach (var p in list)
+                {
+                    var productImageList = _context.ProductImages.Select(productImage => productImage).Where(productImage => productImage.ProductId == p.Id);
+                    foreach (var image in productImageList)
+                    {
+                        p.ProductImages.Add(image);
+                    }
+                }
+                var resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+
+                return new AppServiceResult<List<ProductShortDto>>(true, 0, "Succeed!", resultList.ToList());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<List<ProductShortDto>>(false, 99, "Unknown error", null);
             }
         }
     }
