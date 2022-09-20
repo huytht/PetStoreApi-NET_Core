@@ -2,6 +2,6 @@
 {
     public class FileConstant
     {
-        public static readonly string FILE_URL_PATH = "/MyFile/Images/";
+        public static readonly string FILE_URL_PATH = "/myfile/images/";
     }
 }
