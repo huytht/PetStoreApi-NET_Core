@@ -11,8 +11,8 @@ namespace PetStoreApi.DTO.ProductDTO
         public string Name { get; set; }
         public int? Age { get; set; }
         public int AmountInStock { get; set; }
-        public ICollection<ProductOriginDto> ProductOrigins { get; set; }
-        public ICollection<string> ImagePath  { get; set; }
+        public ICollection<ProductOriginDto> ProductOrigins { get; set; } = new HashSet<ProductOriginDto>();
+        public ICollection<string> ImagePath { get; set; } = new HashSet<string>();
         public string Description { get; set; }
         public bool? Gender { get; set; }
         public double Price { get; set; }
@@ -34,7 +34,8 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.Description = src.Description;
             dto.Status = src.Status;
             dto.Price = src.Price;
-            dto.Category = CategoryDto.CreateFromEntity(src.Category);
+            if (src.Category != null)
+                dto.Category = CategoryDto.CreateFromEntity(src.Category);
             if (src.Age != null)
                 dto.Age = src.Age;
             if (src.Gender != null)
@@ -45,7 +46,10 @@ namespace PetStoreApi.DTO.ProductDTO
             {
                 foreach(var origin in src.ProductOrigins)
                 {
-                    dto.ProductOrigins.Add(ProductOriginDto.CreateFromEntity(origin));
+                    if (origin != null)
+                    {
+                        dto.ProductOrigins.Add(ProductOriginDto.CreateFromEntity(origin));
+                    }
                 }
             }
             if (src.ProductImages.Count > 0)

@@ -3,7 +3,6 @@ using ToStringSourceGenerator.Attributes;
 
 namespace PetStoreApi.Data.Entity
 {
-    [AutoToString]
     public class Product
     {
         public Guid Id { get; set; }
@@ -17,15 +16,10 @@ namespace PetStoreApi.Data.Entity
         public int Rate { get; set; }
         public int? BreedId { get; set; }
         public int CategoryId { get; set; }
-        [SkipToString]
         public Breed Breed { get; set; }
-        [SkipToString]
         public Category Category { get; set; }
-        [SkipToString]
         public ICollection<OrderItem> OrderItems { get; set; }
-        [SkipToString]
         public ICollection<ProductImage> ProductImages { get; set; }
-        [SkipToString]
         public ICollection<ProductOrigin> ProductOrigins { get; set; }
         public Product()
         {
