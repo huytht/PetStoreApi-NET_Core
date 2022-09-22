@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PetStoreApi.Helpers;
 
@@ -11,9 +12,10 @@ using PetStoreApi.Helpers;
 namespace PetStoreApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220921062214_UpdateOrderItemSchema")]
+    partial class UpdateOrderItemSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -145,12 +147,14 @@ namespace PetStoreApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("BreedId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("Gender")
@@ -163,10 +167,10 @@ namespace PetStoreApi.Migrations
                     b.Property<double>("Price")
                         .HasColumnType("float");
 
-                    b.Property<int?>("Rate")
+                    b.Property<int>("Rate")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Status")
+                    b.Property<bool>("Status")
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
@@ -239,6 +243,8 @@ namespace PetStoreApi.Migrations
                     b.HasOne("PetStoreApi.Data.Entity.Breed", "Breed")
                         .WithMany("Products")
                         .HasForeignKey("BreedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("FK_Product_Breed");
 
                     b.HasOne("PetStoreApi.Data.Entity.Category", "Category")
