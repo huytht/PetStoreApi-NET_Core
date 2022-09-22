@@ -11,7 +11,7 @@
         public int? Age { get; set; }
         public bool Status { get; set; }
         public int? BreedId { get; set; }
-        public int?[] OriginIds { get; set; }
+        public int?[]? OriginIds { get; set; }
         public int? CategoryId { get; set; }
 
         public ProductCreateDto()

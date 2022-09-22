@@ -12,7 +12,7 @@ namespace PetStoreApi.DTO.ProductDTO
         public int AmountInStock { get; set; }
         public string ImagePath { get; set; }
         public double Price { get; set; }
-        public int Rate { get; set; }
+        public int? Rate { get; set; }
         public ProductShortDto()
         {
         }
@@ -25,7 +25,6 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.AmountInStock = src.AmountInStock;
             dto.Price = src.Price;
             dto.Rate = src.Rate;
-            Console.WriteLine("====================================>" + src.ProductImages.Count + "<============================================");
             if (src.ProductImages.Count > 0)
                 dto.ImagePath = src.ProductImages.First(e => e.ProductId == src.Id).ImagePath;
 
