@@ -4,6 +4,7 @@ using PetStoreApi.DTO.ProductDTO;
 using PetStoreApi.Domain;
 using PetStoreApi.Services;
 using PetStoreApi.Data.Entity;
+using PetStoreApi.Constants;
 
 namespace PetStoreApi.Controllers
 {
@@ -17,17 +18,39 @@ namespace PetStoreApi.Controllers
         {
             _productRepository = productRepository;
         }
-        [HttpGet("cat/list")]
-        public IActionResult GetCatList()
+        [HttpGet("{productType?}/list")]
+        public IActionResult GetProductList(string productType = "all", int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
         {
-            AppServiceResult<List<ProductShortDto>> result = _productRepository.GetCatList();
+            PageParam pageParam = new PageParam(pageNumber, pageSize);
+
+            AppServiceResult<PaginatedList<ProductShortDto>> result = _productRepository.GetProductList(pageParam, productType);
 
             return Ok(result);
         }
-        [HttpGet("dog/list")]
-        public IActionResult GetDogList()
+        [HttpGet("{id}")]
+        public IActionResult GetProductDetail(Guid id)
         {
-            AppServiceResult<List<ProductShortDto>> result = _productRepository.GetDogList();
+            AppServiceResult<ProductDto> result = _productRepository.GetProductById(id);
+
+            return Ok(result);
+        }
+        [HttpGet("{categoryId}/{breedId}/list")]
+        public IActionResult GetProductFilterList(int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT,
+                                                 int categoryId = AppConstant.CATEGORY_ID_DEFAULT, int breedId = AppConstant.BREED_ID_DEFAULT)
+        {
+            PageParam pageParam = new PageParam(pageNumber, pageSize);
+            FilterParam filterParam = new FilterParam(breedId, categoryId);
+
+            AppServiceResult<PaginatedList<ProductShortDto>> result = _productRepository.GetProductFilterList(pageParam, filterParam);
+
+            return Ok(result);
+        }
+        [HttpGet("search/{keyword}")]
+        public IActionResult SearchProduct(string keyword, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
+        {
+            PageParam pageParam = new PageParam(pageNumber, pageSize);
+
+            AppServiceResult<PaginatedList<ProductShortDto>> result = _productRepository.SearchProduct(pageParam, keyword);
 
             return Ok(result);
         }
@@ -35,8 +58,7 @@ namespace PetStoreApi.Controllers
         public IActionResult AddProduct([FromForm] ProductCreateDto product)
         {
             AppServiceResult<Product> result = _productRepository.AddProduct(product);
-            Console.WriteLine("=========================================>" + result);
-            return Ok(result);
+            return result.success ? StatusCode(StatusCodes.Status201Created, result) : BadRequest();
         }
     }
 }

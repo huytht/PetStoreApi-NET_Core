@@ -8,6 +8,9 @@ using System.Collections;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using static System.Net.Mime.MediaTypeNames;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Collections.Generic;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -69,6 +72,7 @@ namespace PetStoreApi.Services.Repositories
                         return null;
                     }
                 }
+                
                 if (product.OriginIds != null)
                 {
                     foreach (var originId in product.OriginIds)
@@ -126,51 +130,126 @@ namespace PetStoreApi.Services.Repositories
             }
         }
 
-        public AppServiceResult<List<ProductShortDto>> GetCatList()
+        public AppServiceResult<ProductDto> GetProductById(Guid id)
         {
             try
             {
-                var list = _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("mèo"));
-                foreach(var p in list)
+                var product = _context.Products.OrderBy(product => product.Id).FirstOrDefault(product => product.Id.Equals(id));
+
+                #region FindList
+                var imageList = _context.ProductImages.Select(image => image).Where(image => image.ProductId.Equals(id));
+
+                var productOriginList = _context.ProductOrigins.Select(po => po).Where(po => po.ProductId.Equals(id));
+                foreach (var productOrigin in productOriginList)
                 {
-                    var productImageList = _context.ProductImages.Select(productImage => productImage).Where(productImage => productImage.ProductId == p.Id);
-                    foreach (var image in productImageList)
-                    {
-                        p.ProductImages.Add(image);
-                    }
+                    var origin = _context.Origins.OrderBy(o => o.Id).FirstOrDefault(o => o.Id == productOrigin.OriginId);
+                    productOrigin.Origin = origin;
                 }
-                var resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+
+                var suggestionList = _context.Products.Select(p => p).Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
+                AddImageToList(ref suggestionList);
                 
-                return new AppServiceResult<List<ProductShortDto>>(true, 0, "Succeed!", resultList.ToList());
+                #endregion
+                product.Breed = _context.Breeds.FirstOrDefault(b => b.Id.Equals(product.BreedId));
+                product.Category = _context.Categories.FirstOrDefault(c => c.Id.Equals(product.CategoryId));
+                #region AddList
+                product.ProductImages.ToList().AddRange(imageList.ToList());
+                product.ProductOrigins.ToList().AddRange(productOriginList.ToList());
+                //product.ProductSuggestions.ToList().AddRange(suggestionList.ToList());
+                #endregion
+
+                ProductDto result = ProductDto.CreateFromEntity(product, suggestionList.Select(p => ProductShortDto.CreateFromEntity(p)));
+
+                return new AppServiceResult<ProductDto>(true, 0, "Succeed!", result);
             }
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                return new AppServiceResult<List<ProductShortDto>>(false, 99, "Unknown error", null);
+                return new AppServiceResult<ProductDto>(false, 99, "Unknown error", null);
             }
         }
 
-        public AppServiceResult<List<ProductShortDto>> GetDogList()
+        public AppServiceResult<PaginatedList<ProductShortDto>> GetProductList(PageParam pageParam, string type = "all")
         {
             try
             {
-                var list = _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("chó"));
-                foreach (var p in list)
+                IQueryable<Product> list;
+                switch (type)
                 {
-                    var productImageList = _context.ProductImages.Select(productImage => productImage).Where(productImage => productImage.ProductId == p.Id);
-                    foreach (var image in productImageList)
-                    {
-                        p.ProductImages.Add(image);
-                    }
+                    case "dog": list = _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("chó"));
+                                break;
+                    case "cat": list = _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("mèo"));
+                                break;
+                    case "accessory": list = _context.Products.Select(product => product).Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó"));
+                                break;
+                    default: list = _context.Products.Select(product => product);
+                             break;
                 }
-                var resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+                AddImageToList(ref list);
+                IQueryable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
 
-                return new AppServiceResult<List<ProductShortDto>>(true, 0, "Succeed!", resultList.ToList());
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", PaginatedList<ProductShortDto>.Create(resultList, pageParam.PageIndex, pageParam.PageSize));
             }
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                return new AppServiceResult<List<ProductShortDto>>(false, 99, "Unknown error", null);
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 99, "Unknown error", null);
+            }
+        }
+
+        public void AddImageToList(ref IQueryable<Product> list)
+        {
+            foreach (var p in list)
+            {
+                ProductImage image = _context.ProductImages.First(productImage => productImage.ProductId == p.Id);
+                p.ProductImages.Add(image);
+            }
+        }
+
+        public AppServiceResult<PaginatedList<ProductShortDto>> GetProductFilterList(PageParam pageParam, FilterParam filterParam)
+        {
+            try
+            {
+                IQueryable<Product> list;
+                if (filterParam.BreedId == 0)
+                {
+                    if (filterParam.CategoryId == 0)
+                    {
+                        list = _context.Products.Select(p => p);
+                    } else
+                    {
+                        list = _context.Products.Select(p => p).Where(p => p.CategoryId == filterParam.CategoryId);
+                    }
+                } else
+                {
+                    list = _context.Products.Select(p => p).Where(p => p.BreedId == filterParam.BreedId);
+                }
+                AddImageToList(ref list);
+                IQueryable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", PaginatedList<ProductShortDto>.Create(resultList, pageParam.PageIndex, pageParam.PageSize));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 99, "Unknown error", null);
+            }
+        }
+
+        public AppServiceResult<PaginatedList<ProductShortDto>> SearchProduct(PageParam pageParam, string keyword)
+        {
+            try
+            {
+                var list = _context.Products.Select(p => p).Where(p => p.Name.Contains(keyword) || p.Breed.Name.Contains(keyword) || p.Category.Name.Contains(keyword));
+                AddImageToList(ref list);
+                IQueryable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", PaginatedList<ProductShortDto>.Create(resultList, pageParam.PageIndex, pageParam.PageSize));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 99, "Unknown error", null);
             }
         }
     }
