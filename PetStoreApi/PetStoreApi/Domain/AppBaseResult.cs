@@ -15,5 +15,13 @@
             errorCode = _errorCode;
             message = _message;
         }
+        public static AppBaseResult GenarateIsSucceed()
+        {
+            return new AppBaseResult(true, 0, "Succeed!");
+        }
+        public static AppBaseResult GenarateIsFailed(int errorCode, String message)
+        {
+            return new AppBaseResult(false, errorCode, message);
+        }
     }
 }

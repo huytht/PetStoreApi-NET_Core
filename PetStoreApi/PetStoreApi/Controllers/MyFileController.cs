@@ -5,7 +5,7 @@ namespace PetStoreApi.Controllers
 {
     [ApiController]
     [Route("api/myfile")]
-    public class MyFileController : Controller
+    public class MyFileController : ControllerBase
     {
         private readonly IWebHostEnvironment _hostingEnvironment;
 
