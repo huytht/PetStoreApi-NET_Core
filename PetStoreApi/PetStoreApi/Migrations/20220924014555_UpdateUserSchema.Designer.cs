@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PetStoreApi.Helpers;
 
@@ -11,9 +12,10 @@ using PetStoreApi.Helpers;
 namespace PetStoreApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220924014555_UpdateUserSchema")]
+    partial class UpdateUserSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -289,42 +291,6 @@ namespace PetStoreApi.Migrations
                     b.ToTable("ProductOrigin", (string)null);
                 });
 
-            modelBuilder.Entity("PetStoreApi.Data.Entity.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ExpiredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("IssuedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("JwtId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RefreshToken", (string)null);
-                });
-
             modelBuilder.Entity("PetStoreApi.Data.Entity.UserInfo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -336,12 +302,15 @@ namespace PetStoreApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -496,18 +465,6 @@ namespace PetStoreApi.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("PetStoreApi.Data.Entity.RefreshToken", b =>
-                {
-                    b.HasOne("PetStoreApi.Data.Entity.AppUser", "AppUser")
-                        .WithMany("RefreshTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_RefreshToken_AppUser");
-
-                    b.Navigation("AppUser");
-                });
-
             modelBuilder.Entity("PetStoreApi.Data.Entity.VerificationToken", b =>
                 {
                     b.HasOne("PetStoreApi.Data.Entity.AppUser", "AppUser")
@@ -530,8 +487,6 @@ namespace PetStoreApi.Migrations
                     b.Navigation("AppUserRoles");
 
                     b.Navigation("Orders");
-
-                    b.Navigation("RefreshTokens");
 
                     b.Navigation("VerificationTokens");
                 });
