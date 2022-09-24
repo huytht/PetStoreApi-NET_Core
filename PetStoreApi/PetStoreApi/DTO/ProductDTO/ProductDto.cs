@@ -62,7 +62,7 @@ namespace PetStoreApi.DTO.ProductDTO
             }
             return dto;
         }
-        public static ProductDto CreateFromEntity(Product src, IQueryable<ProductShortDto> suggestionList)
+        public static ProductDto CreateFromEntity(Product src, IEnumerable<ProductShortDto> suggestionList)
         {
             ProductDto dto = new ProductDto();
 

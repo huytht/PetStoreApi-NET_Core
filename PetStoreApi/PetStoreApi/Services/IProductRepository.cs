@@ -6,9 +6,9 @@ namespace PetStoreApi.Services
 {
     public interface IProductRepository
     {
-        AppServiceResult<PaginatedList<ProductShortDto>> GetProductList(PageParam pageParam, string type = "all");
-        AppServiceResult<PaginatedList<ProductShortDto>> GetProductFilterList(PageParam pageParam, FilterParam filterParam);
-        AppServiceResult<PaginatedList<ProductShortDto>> SearchProduct(PageParam pageParam, string keyword);
+        Task<AppServiceResult<PaginatedList<ProductShortDto>>> GetProductList(PageParam pageParam, string type = "all");
+        Task<AppServiceResult<PaginatedList<ProductShortDto>>> GetProductFilterList(PageParam pageParam, FilterParam filterParam);
+        Task<AppServiceResult<PaginatedList<ProductShortDto>>> SearchProduct(PageParam pageParam, string keyword);
         AppServiceResult<ProductDto> GetProductById(Guid id);
         //IEnumerable<Product> GetProductList();
         //Product GetProductById(int id);

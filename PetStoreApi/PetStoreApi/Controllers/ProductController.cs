@@ -5,12 +5,13 @@ using PetStoreApi.Domain;
 using PetStoreApi.Services;
 using PetStoreApi.Data.Entity;
 using PetStoreApi.Constants;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PetStoreApi.Controllers
 {
     [ApiController]
     [Route("api/product")]
-    public class ProductController : Controller
+    public class ProductController : ControllerBase
     {
         private readonly IProductRepository _productRepository;
 
@@ -19,11 +20,11 @@ namespace PetStoreApi.Controllers
             _productRepository = productRepository;
         }
         [HttpGet("{productType?}/list")]
-        public IActionResult GetProductList(string productType = "all", int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
+        public async Task<IActionResult> GetProductList(string productType = "all", int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
         {
             PageParam pageParam = new PageParam(pageNumber, pageSize);
 
-            AppServiceResult<PaginatedList<ProductShortDto>> result = _productRepository.GetProductList(pageParam, productType);
+            AppServiceResult<PaginatedList<ProductShortDto>> result = await _productRepository.GetProductList(pageParam, productType);
 
             return Ok(result);
         }
@@ -35,26 +36,27 @@ namespace PetStoreApi.Controllers
             return Ok(result);
         }
         [HttpGet("{categoryId}/{breedId}/list")]
-        public IActionResult GetProductFilterList(int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT,
+        public async Task<IActionResult> GetProductFilterList(int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT,
                                                  int categoryId = AppConstant.CATEGORY_ID_DEFAULT, int breedId = AppConstant.BREED_ID_DEFAULT)
         {
             PageParam pageParam = new PageParam(pageNumber, pageSize);
             FilterParam filterParam = new FilterParam(breedId, categoryId);
 
-            AppServiceResult<PaginatedList<ProductShortDto>> result = _productRepository.GetProductFilterList(pageParam, filterParam);
+            AppServiceResult<PaginatedList<ProductShortDto>> result = await _productRepository.GetProductFilterList(pageParam, filterParam);
 
             return Ok(result);
         }
         [HttpGet("search/{keyword}")]
-        public IActionResult SearchProduct(string keyword, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
+        public async Task<IActionResult> SearchProduct(string keyword, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
         {
             PageParam pageParam = new PageParam(pageNumber, pageSize);
 
-            AppServiceResult<PaginatedList<ProductShortDto>> result = _productRepository.SearchProduct(pageParam, keyword);
+            AppServiceResult<PaginatedList<ProductShortDto>> result = await _productRepository.SearchProduct(pageParam, keyword);
 
             return Ok(result);
         }
         [HttpPost]
+        [Authorize]
         public IActionResult AddProduct([FromForm] ProductCreateDto product)
         {
             AppServiceResult<Product> result = _productRepository.AddProduct(product);
