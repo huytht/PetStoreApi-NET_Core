@@ -13,6 +13,8 @@
         public string Address { get; set; }
         public string Phone { get; set; }
         public DateTime OrderDate { get; set; }
+        public Guid UserId { get; set; }
+        public AppUser AppUser { get; set; }
 
         public ICollection<OrderItem> OrderItems { get; set; }
         public Order()
