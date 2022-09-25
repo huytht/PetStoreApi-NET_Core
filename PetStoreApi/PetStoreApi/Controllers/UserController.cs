@@ -15,7 +15,13 @@ namespace PetStoreApi.Controllers
         {
             _appUserRepository = appUserRepository;
         }
+        [HttpGet("verify/{token}")]
+        public async Task<IActionResult> VerifyEmail(string token)
+        {
+            AppBaseResult result = await _appUserRepository.VerifyEmail(token);
 
+            return Ok(result);
+        }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]UserLoginDto userLogin)
         {
@@ -24,9 +30,9 @@ namespace PetStoreApi.Controllers
             return Ok(result);
         }
         [HttpPost("register")]
-        public IActionResult Register([FromBody] UserRegisterDto userRegister)
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegister)
         {
-            AppBaseResult result = _appUserRepository.Register(userRegister);
+            AppBaseResult result = await _appUserRepository.Register(userRegister);
 
             return Ok(result);
         }

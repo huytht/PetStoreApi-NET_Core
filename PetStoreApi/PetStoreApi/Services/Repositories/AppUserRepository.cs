@@ -11,6 +11,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using MimeKit;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -21,13 +23,15 @@ namespace PetStoreApi.Services.Repositories
         private readonly IMapper _mapper;
         private readonly IJwtProvider _jwtProvider;
         private readonly AppSetting _appSetting;
-        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor)
+        private readonly IEmailSender _emailSender;
+        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor, IEmailSender emailSender)
         {
             _context = context;
             _logger = logger;
             _mapper = mapper;
             _jwtProvider = jwtProvider;
             _appSetting = optionsMonitor.CurrentValue;
+            _emailSender = emailSender;
         }
 
         public async Task<AppServiceResult<UserLoginResponseDto>> Login(UserLoginDto userLogin)
@@ -36,10 +40,21 @@ namespace PetStoreApi.Services.Repositories
             
             var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username == userLogin.Username);
             
-            if (user == null && !hashPassword.Equals(user.Password))
+            if (user == null && !hashPassword.Equals(user?.Password))
             {
-                return new AppServiceResult<UserLoginResponseDto>(false, 404, "Invalid username/password", null);
+                return new AppServiceResult<UserLoginResponseDto>(false, 404, "Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại.", null);
+            } else
+            {
+                if (!user.Enabled)
+                {
+                    return new AppServiceResult<UserLoginResponseDto>(false, 0, "Tài khoản của bạn chưa được kích hoạt. Vui lòng xác nhận email hoặc liên hệ với quản trị viên.", null);
+                }
+                if (!user.AccountNonLocked)
+                {
+                    return new AppServiceResult<UserLoginResponseDto>(false, 0, "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với quản trị viên", null);
+                }
             }
+           
 
             UserLoginResponseDto result = _mapper.Map<UserLoginResponseDto>(user);
             
@@ -53,11 +68,11 @@ namespace PetStoreApi.Services.Repositories
 
         }
 
-        public AppBaseResult Register(UserRegisterDto userRegister)
+        public async Task<AppBaseResult> Register(UserRegisterDto userRegister)
         {
             try
             {
-                var userByEmail = _context.AppUsers.FirstOrDefault(u => u.Email.Equals(userRegister.Email));
+                var userByEmail = await _context.AppUsers.FirstOrDefaultAsync(u => u.Email.Equals(userRegister.Email));
                 if (userByEmail != null)
                 {
                     _logger.LogWarning("Email is exist: " + userRegister.Email + ", Cannot further process!");
@@ -65,7 +80,7 @@ namespace PetStoreApi.Services.Repositories
                     return AppBaseResult.GenarateIsFailed(101,
                         "Email " + userRegister.Email + " đã được sử dụng. Vui lòng nhập email khác");
                 }
-                var userByUsername = _context.AppUsers.FirstOrDefault(u => u.Username.Equals(userRegister.Username));
+                var userByUsername = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(userRegister.Username));
                 if (userByUsername != null)
                 {
                     _logger.LogWarning("Username is exist: " + userRegister.Username + ", Cannot further process!");
@@ -75,20 +90,25 @@ namespace PetStoreApi.Services.Repositories
                 }
                 AppUser user = _mapper.Map<AppUser>(userRegister);
                 user.Id = new Guid();
-                var defaultRole = _context.AppRoles.FirstOrDefault(r => r.Name.Equals(RoleConstant.ROLE_MEMBER));
+                var defaultRole = await _context.AppRoles.FirstOrDefaultAsync(r => r.Name.Equals(RoleConstant.ROLE_MEMBER));
                 user.AppUserRoles.Add(new AppUserRole(user.Id, defaultRole.Id));
 
                 user.UserInfo = new UserInfo();
 
                 user.UserInfo.AvatarImg = FileConstant.TEMP_PROFILE_IMAGE_BASE_URL + userRegister.Username;
 
-                user.Enabled = true;
+                user.Enabled = false;
                 user.AccountNonLocked = true;
 
                 user.Password = BC.HashPassword(userRegister.Password);
 
-                _context.AppUsers.Add(user);
-                _context.SaveChanges();
+                await _context.AppUsers.AddAsync(user);
+                await _context.SaveChangesAsync();
+
+                //string toEmailFormat = user.Email + " <" + user.Email + ">";
+                Message message = new Message(user.Email, "Send Email Verify", null, null, user);
+
+                await _emailSender.SendEmailAsync(message);
 
                 return AppBaseResult.GenarateIsSucceed();
             }
@@ -179,6 +199,35 @@ namespace PetStoreApi.Services.Repositories
             catch (Exception ex)
             {
                 return new AppServiceResult<TokenModel>(false, 0, "Something went wrong", null);
+            }
+        }
+
+        public async Task<AppBaseResult> VerifyEmail(string token)
+        {
+            VerificationToken vToken = await _context.VerificationTokens.FirstOrDefaultAsync(v => v.Token == token);
+
+            if (vToken != null)
+            {
+                if (vToken.VerifyDate != null)
+                {
+                    _logger.LogWarning("Token verified");
+
+                    return AppBaseResult.GenarateIsFailed(101, "Token verified!");
+                }
+
+                vToken.IsVerify = true;
+                vToken.VerifyDate = DateTime.Now;
+
+                var user = _context.AppUsers.SingleOrDefault(nd => nd.Id == vToken.UserId);
+                user.Enabled = true;
+
+                await _context.SaveChangesAsync();
+
+                return AppBaseResult.GenarateIsSucceed();
+            } else
+            {
+                _logger.LogWarning("Token is not exist: " + token);
+                return AppBaseResult.GenarateIsFailed(99, "Token is not exist!");
             }
         }
 

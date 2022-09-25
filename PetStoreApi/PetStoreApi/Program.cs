@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PetStoreApi.Domain;
+using PetStoreApi.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +41,13 @@ builder.Services.AddScoped<IFileRepository, FileRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 #endregion
+
+var emailConfig = builder.Configuration
+        .GetSection("EmailConfiguration")
+        .Get<EmailConfiguration>();
+builder.Services.AddSingleton(emailConfig);
 
 builder.Services.Configure<AppSetting>(builder.Configuration.GetSection("AppSettings"));
 

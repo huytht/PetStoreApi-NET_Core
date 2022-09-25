@@ -6,7 +6,7 @@
         public string Token { get; set; }
         public bool IsSend { get; set; }
         public bool IsVerify { get; set; }
-        public DateTime VerifyDate { get; set; }
+        public DateTime? VerifyDate { get; set; }
         public Guid UserId { get; set; }
         public AppUser AppUser { get; set; }
     }
