@@ -53,5 +53,5 @@ jobs:
         with:
           app-name: 'PetStoreApiNetCore'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FF71497B63F841B2984BF9FC4D797F7D }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_193BBA97643A46E29FEA2AF06751C2F4 }}
           package: .
