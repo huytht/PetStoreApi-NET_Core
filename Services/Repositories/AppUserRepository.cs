@@ -54,7 +54,6 @@ namespace PetStoreApi.Services.Repositories
                     return new AppServiceResult<UserLoginResponseDto>(false, 0, "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với quản trị viên", null);
                 }
             }
-           
 
             UserLoginResponseDto result = _mapper.Map<UserLoginResponseDto>(user);
             
