@@ -11,7 +11,7 @@ env:
   AZURE_APIM_SERVICENAME: PetStoreApi-NetCore
   AZURE_APIM_API_ID: pet-store-api
   AZURE_APIM_APPSERVICEURL: https://pet-store-api-netcore.azurewebsites.net
-  SWASHBUCLE_ASPNET_CORE_CLI_PACKAGE_VERSION: 6.4.0
+  SWASHBUCLE_ASPNET_CORE_CLI_PACKAGE_VERSION: 6.0.0
   SWASHBUCKLE_DOTNET_CORE_VERSION: 6.0.x
   API_IMPORT_SPECIFICATION_PATH: .\publish\swagger.json
   API_IMPORT_DLL: .\bin\Release\net6.0\PetStoreApi.dll
