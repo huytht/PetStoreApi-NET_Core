@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PetStoreApi.Data.Entity;
 
@@ -6,10 +7,11 @@ namespace PetStoreApi.Helpers
 {
     public class DataContext : DbContext
     {
+        
         public DataContext()
         {
         }
-        public DataContext(DbContextOptions options): base(options)
+        public DataContext(DbContextOptions options) : base(options)
         {
         }
 
@@ -28,6 +30,8 @@ namespace PetStoreApi.Helpers
         public DbSet<UserInfo> UserInfos { get; set; }
         public DbSet<VerificationToken> VerificationTokens { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<OrderStatus> OrderStatuses { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -74,6 +78,14 @@ namespace PetStoreApi.Helpers
                     .WithMany(u => u.Orders)
                     .HasForeignKey(o => o.UserId)
                     .HasConstraintName("FK_Order_AppUser");
+                entity.HasOne(o => o.OrderStatus)
+                    .WithMany(os => os.Orders)
+                    .HasForeignKey(o => o.OrderStatusId)
+                    .HasConstraintName("FK_Order_OrderStatus");
+                entity.HasOne(o => o.Payment)
+                   .WithMany(p => p.Orders)
+                   .HasForeignKey(o => o.PaymentId)
+                   .HasConstraintName("FK_Order_Payment");
             });
             modelBuilder.Entity<OrderItem>(entity =>
             {
@@ -170,6 +182,16 @@ namespace PetStoreApi.Helpers
                     .WithMany(u => u.RefreshTokens)
                     .HasForeignKey(r => r.UserId)
                     .HasConstraintName("FK_RefreshToken_AppUser");
+            });
+            modelBuilder.Entity<OrderStatus>(entity =>
+            {
+                entity.ToTable("OrderStatus");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.ToTable("Payment");
+                entity.HasKey(e => e.Id);
             });
         }
 

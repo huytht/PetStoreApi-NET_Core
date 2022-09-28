@@ -1,4 +1,6 @@
-﻿namespace PetStoreApi.Data.Entity
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace PetStoreApi.Data.Entity
 {
     public class Breed
     {

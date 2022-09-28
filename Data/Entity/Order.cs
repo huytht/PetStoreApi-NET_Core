@@ -14,6 +14,10 @@
         public string Phone { get; set; }
         public DateTime OrderDate { get; set; }
         public Guid UserId { get; set; }
+        public int PaymentId { get; set; }
+        public int OrderStatusId { get; set; }
+        public OrderStatus OrderStatus { get; set; }
+        public Payment Payment { get; set; }
         public AppUser AppUser { get; set; }
 
         public ICollection<OrderItem> OrderItems { get; set; }
