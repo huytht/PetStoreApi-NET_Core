@@ -170,7 +170,7 @@ namespace PetStoreApi.Services.Repositories
                     case "all": list = await _context.Products.Select(product => product).ToListAsync();
                         break;
                     case "dog": list = await _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("chó")).ToListAsync();
-                                break;
+                        break;
                     case "cat": list = await _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
                                 break;
                     case "accessory": list = await _context.Products.Select(product => product).Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
@@ -181,7 +181,9 @@ namespace PetStoreApi.Services.Repositories
                 AddImageToList(ref list);
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
 
-                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", PaginatedList<ProductShortDto>.Create(resultList, pageParam.PageIndex, pageParam.PageSize));
+                PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
+
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", resultPage);
             }
             catch (Exception e)
             {
@@ -220,7 +222,9 @@ namespace PetStoreApi.Services.Repositories
                 AddImageToList(ref list);
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
 
-                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", PaginatedList<ProductShortDto>.Create(resultList, pageParam.PageIndex, pageParam.PageSize));
+                PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
+
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", resultPage);
             }
             catch (Exception e)
             {
@@ -237,8 +241,10 @@ namespace PetStoreApi.Services.Repositories
 
                 AddImageToList(ref list);
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+                
+                PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
 
-                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", PaginatedList<ProductShortDto>.Create(resultList, pageParam.PageIndex, pageParam.PageSize));
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", resultPage);
             }
             catch (Exception e)
             {

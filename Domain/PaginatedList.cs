@@ -1,27 +1,35 @@
 ﻿using PetStoreApi.Constants;
+using PetStoreApi.DTO.PaginationDTO;
+using System.Runtime.CompilerServices;
 
 namespace PetStoreApi.Domain
 {
-    public class PaginatedList<T> : List<T>
+    public class PaginatedList<T>
     {
-        public int PageIndex { get; set; }
-        public int TotalPage { get; set; }
-
-        public PaginatedList(List<T> items, int count, int pageIndex, int pageSize)
+        public IEnumerable<T> Content { get; set; }
+        public PageInfo PageInfo { get; set; }
+        public PaginatedList()
         {
-            PageIndex = pageIndex;
-            TotalPage = (int)Math.Ceiling(count / (double)pageSize);
-            AddRange(items);
         }
-        public bool HasPreviousPage => PageIndex > 1;
-        public bool HasNextPage => PageIndex < TotalPage;
 
-        public static PaginatedList<T> Create(IEnumerable<T> source, int pageIndex, int pageSize)
+        public PaginatedList(IEnumerable<T> source, int pageIndex, int pageSize)
         {
             var count = source.Count();
             var items = source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
 
-            return new PaginatedList<T>(items, count, pageIndex, pageSize);
+            this.Content = items;
+            this.PageInfo = new PageInfo();
+            this.PageInfo.TotalElements = count;
+            this.PageInfo.NumberOfElement = items.Count;
+            this.PageInfo.CurrentPage = pageIndex;
+            this.PageInfo.TotalPage = (int)Math.Ceiling(count / (double)pageSize);
+            this.PageInfo.PageSize = pageSize;
+            this.PageInfo.HasNext = pageIndex < pageSize;
+            this.PageInfo.HasPrevious = pageIndex > 1;
+            this.PageInfo.IsFirst = pageIndex == 1;
+            this.PageInfo.IsLast = pageIndex == pageSize;
+
+            //return new PaginatedList<T>(items, count, pageIndex, pageSize);
         }
     }
 }

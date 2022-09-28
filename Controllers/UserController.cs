@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using PetStoreApi.Constants;
 using PetStoreApi.Domain;
+using PetStoreApi.DTO.OrderDTO;
 using PetStoreApi.DTO.UserDTO;
 using PetStoreApi.Services;
+using System.Security.Claims;
 
 namespace PetStoreApi.Controllers
 {
@@ -10,10 +14,12 @@ namespace PetStoreApi.Controllers
     public class UserController : ControllerBase
     {
         private readonly IAppUserRepository _appUserRepository;
+        private readonly IOrderRepository _orderRepository;
 
-        public UserController(IAppUserRepository appUserRepository)
+        public UserController(IAppUserRepository appUserRepository, IOrderRepository orderRepository)
         {
             _appUserRepository = appUserRepository;
+            _orderRepository = orderRepository;
         }
         [HttpGet("verify/{token}")]
         public async Task<IActionResult> VerifyEmail(string token)
@@ -40,6 +46,16 @@ namespace PetStoreApi.Controllers
         public async Task<IActionResult> RefreshToken(TokenModel model)
         {
             AppServiceResult<TokenModel> result = await _appUserRepository.RenewToken(model);
+
+            return Ok(result);
+        }
+        [HttpGet("order")]
+        [Authorize]
+        public async Task<IActionResult> GetOrderlist(int orderStatus, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
+        {
+            PageParam pageParam = new PageParam(pageNumber, pageSize);
+
+            AppServiceResult<PaginatedList<OrderDto>> result = await _orderRepository.GetListOrder(orderStatus, pageParam);
 
             return Ok(result);
         }
