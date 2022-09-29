@@ -13,6 +13,8 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using MimeKit;
+using PetStoreApi.DTO.UserInfoDTO;
+using System.Security.Claims;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -24,7 +26,10 @@ namespace PetStoreApi.Services.Repositories
         private readonly IJwtProvider _jwtProvider;
         private readonly AppSetting _appSetting;
         private readonly IEmailSender _emailSender;
-        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor, IEmailSender emailSender)
+        private readonly IHttpContextAccessor? _httpContextAccessor;
+        private readonly IFileRepository _fileRepository;
+
+        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor, IEmailSender emailSender, IHttpContextAccessor? httpContextAccessor, IFileRepository fileRepository)
         {
             _context = context;
             _logger = logger;
@@ -32,39 +37,150 @@ namespace PetStoreApi.Services.Repositories
             _jwtProvider = jwtProvider;
             _appSetting = optionsMonitor.CurrentValue;
             _emailSender = emailSender;
+            _httpContextAccessor = httpContextAccessor;
+            _fileRepository = fileRepository;
+        }
+
+        public async Task<AppBaseResult> ChangePassword(ChangePassword changePassword)
+        {
+            try
+            {
+                string currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                if (!currentUsername.Equals(changePassword.Username))
+                {
+                    _logger.LogWarning("Not match UserId, Cannot further process!");
+
+                    return AppBaseResult.GenarateIsFailed(101, "Not match UserId");
+                }
+
+                if (changePassword.NewPassword.Equals(changePassword.OldPassword))
+                {
+                    _logger.LogWarning("New password equals old password, Cannot further process!");
+
+                    return AppBaseResult.GenarateIsFailed(101, "Mật khẩu mới trùng với mật khẩu cũ!");
+                }
+
+                var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+
+                if (user == null)
+                {
+                    _logger.LogWarning("User is not exist!, Cannot further process!");
+
+                    return AppBaseResult.GenarateIsFailed(101, "User is not exist!");
+                }
+
+                if (BC.Verify(changePassword.OldPassword, user.Password) == false)
+                {
+                    _logger.LogWarning("Password incorrect, Cannot further process!");
+
+                    return AppBaseResult.GenarateIsFailed(101, "Sai mật khẩu!");
+                }
+
+                user.Password = BC.HashPassword(changePassword.NewPassword);
+
+                await _context.SaveChangesAsync();
+
+                return AppBaseResult.GenarateIsSucceed();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
+            }
+
+        }
+
+        public async Task<AppServiceResult<UserInfoResponseDto>> GetProfile(Guid userId)
+        {
+            try
+            {
+                UserInfoResponseDto userInfo = new UserInfoResponseDto();
+                var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user == null)
+                {
+                    _logger.LogWarning("AppUser is null, Cannot further process!");
+                    return new AppServiceResult<UserInfoResponseDto>(false, 101,
+                            "User is not exist!", null);
+                }
+                user.UserInfo = await _context.UserInfos.FirstOrDefaultAsync(ui => ui.Id == user.UserInfoId);
+                userInfo.UserId = user.Id;
+                userInfo.Email = user.Email;
+                userInfo.Username = user.Username;
+                
+                if (user.UserInfo != null)
+                {
+                    // TODO: Implement mapping
+                    userInfo.FirstName = user.UserInfo.FirstName;
+                    userInfo.LastName = user.UserInfo.LastName;
+                    userInfo.AvatarImg = user.UserInfo.AvatarImg;
+                    userInfo.Phone = user.UserInfo.Phone;
+                }
+
+                return new AppServiceResult<UserInfoResponseDto>(true, 0, "Success", userInfo);
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<UserInfoResponseDto>(false, 99, "Unknown", null);
+            }
+        }
+
+        public async Task<AppServiceResult<List<AppUser>>> GetUserList()
+        {
+            try
+            {
+                var users = _context.AppUsers.Select(u => u);
+
+                return new AppServiceResult<List<AppUser>>(true, 0, "Succeed!", users.ToList());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<List<AppUser>>(false, 99, "Unknown", null);
+            }
         }
 
         public async Task<AppServiceResult<UserLoginResponseDto>> Login(UserLoginDto userLogin)
         {
-            string hashPassword = BC.HashPassword(userLogin.Password);
-            
-            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username == userLogin.Username);
-            
-            if (user == null && !hashPassword.Equals(user?.Password))
+            try
             {
-                return new AppServiceResult<UserLoginResponseDto>(false, 404, "Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại.", null);
-            } else
+                var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username == userLogin.Username);
+
+                if (user == null || BC.Verify(userLogin.Password, user.Password) == false)
+                {
+                    return new AppServiceResult<UserLoginResponseDto>(false, 404, "Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại.", null);
+                }
+                else
+                {
+                    if (!user.Enabled)
+                    {
+                        return new AppServiceResult<UserLoginResponseDto>(false, 0, "Tài khoản của bạn chưa được kích hoạt. Vui lòng xác nhận email hoặc liên hệ với quản trị viên.", null);
+                    }
+                    if (!user.AccountNonLocked)
+                    {
+                        return new AppServiceResult<UserLoginResponseDto>(false, 0, "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với quản trị viên", null);
+                    }
+                }
+
+                UserLoginResponseDto result = _mapper.Map<UserLoginResponseDto>(user);
+
+                var token = await _jwtProvider.GenerateToken(user);
+                var userInfo = await _context.UserInfos.FirstOrDefaultAsync(u => u.AppUser.Id == result.Id);
+
+                result.AvatarImg = userInfo.AvatarImg;
+                result.Token = token;
+
+                return new AppServiceResult<UserLoginResponseDto>(true, 0, "Login successful", result);
+            }
+            catch (Exception e)
             {
-                if (!user.Enabled)
-                {
-                    return new AppServiceResult<UserLoginResponseDto>(false, 0, "Tài khoản của bạn chưa được kích hoạt. Vui lòng xác nhận email hoặc liên hệ với quản trị viên.", null);
-                }
-                if (!user.AccountNonLocked)
-                {
-                    return new AppServiceResult<UserLoginResponseDto>(false, 0, "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với quản trị viên", null);
-                }
+                _logger.LogError(e.Message);
+                return new AppServiceResult<UserLoginResponseDto>(false, 99, "Unknown", null);
             }
            
-
-            UserLoginResponseDto result = _mapper.Map<UserLoginResponseDto>(user);
-            
-            var token = await _jwtProvider.GenerateToken(user);
-            var userInfo = await _context.UserInfos.FirstOrDefaultAsync(u => u.AppUser.Id == result.Id);
-
-            result.AvatarImg = userInfo.AvatarImg;
-            result.Token = token;
-
-            return new AppServiceResult<UserLoginResponseDto>(true, 0, "Login successful", result);
 
         }
 
@@ -200,6 +316,98 @@ namespace PetStoreApi.Services.Repositories
             {
                 return new AppServiceResult<TokenModel>(false, 0, "Something went wrong", null);
             }
+        }
+
+        public async Task<AppBaseResult> SaveProfile(UserInfoRequestDto userInfo)
+        {
+            try
+            {
+                string currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                if (currentUsername != null)
+                {
+                    var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+
+                    if (userInfo.UserId != user?.Id)
+                    {
+                        _logger.LogWarning("Not match UserId, Cannot further process!");
+
+                        return AppBaseResult.GenarateIsFailed(101, "User is not match id");
+                    }
+
+                    // TODO: Implement mapping
+                    var userByEmail = await _context.AppUsers.FirstOrDefaultAsync(u => u.Email.Equals(userInfo.Email));
+
+                    if (userByEmail != null && userByEmail.Id != user.Id)
+                    {
+                        _logger.LogWarning("Email is exist: " + userInfo.Email + ", Cannot further process!");
+
+                        return AppBaseResult.GenarateIsFailed(101, "Email " + userInfo.Email + " đã được sử dụng. Vui lòng nhập email khác");
+                    }
+
+                    user.Email = userInfo.Email;
+                    user.UserInfo = await _context.UserInfos.FirstOrDefaultAsync(u => u.Id == user.UserInfoId);
+                    user.UserInfo.FirstName = userInfo.FirstName;
+                    user.UserInfo.LastName = userInfo.LastName;
+                    user.UserInfo.Phone = userInfo.Phone;
+
+                    // Save user
+                    await _context.SaveChangesAsync();
+
+                    return AppBaseResult.GenarateIsSucceed();
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
+            }
+            return AppBaseResult.GenarateIsFailed(99, "Unknown");
+        }
+
+        public async Task<AppServiceResult<string>> UploadImage(IFormFile file)
+        {
+            try
+            {
+                if (file != null)
+                {
+                    string currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                    if (currentUsername != null)
+                    {
+
+                        var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+                        if (user == null)
+                        {
+                            _logger.LogWarning("User is not exist, Cannot further process!");
+
+                            return new AppServiceResult<string>(false, 101, " User is not exist", null);
+                        }
+
+                        string imagePath = _fileRepository.Upload(user.Username, file);
+                        user.UserInfo = await _context.UserInfos.FirstOrDefaultAsync(u => u.Id == user.UserInfoId);
+                        user.UserInfo.AvatarImg = imagePath;
+
+                        await _context.SaveChangesAsync();
+
+                        return new AppServiceResult<string>(true, 0, "Succeed!", imagePath);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Image file is not null, Cannot further process!");
+
+                    return new AppServiceResult<string>(false, 101, "Image file is not null", null);
+                }
+            }
+            catch (IOException e)
+            {
+                _logger.LogError(e.Message);
+
+                return new AppServiceResult<string>(false, 99, "Unknown", null);
+            }
+            return new AppServiceResult<string>(false, 99, "Unknown", null);
         }
 
         public async Task<AppBaseResult> VerifyEmail(string token)
