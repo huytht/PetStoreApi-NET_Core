@@ -12,9 +12,5 @@ namespace PetStoreApi.Services.Repositories
         {
             _context = context;
         }
-        public void AddOrderedProducts(OrderItem orderItem)
-        {
-             _context.OrderItems.Add(orderItem);
-        }
     }
 }

@@ -45,6 +45,7 @@ builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<ICheckoutRepository, CheckoutRepository>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 #endregion
 

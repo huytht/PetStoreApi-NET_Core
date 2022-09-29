@@ -9,5 +9,13 @@
 
         public Order Order { get; set; }
         public Product Product { get; set; }
+
+        public OrderItem(Guid productId, Guid orderId, int quantity, double price)
+        {
+            ProductId = productId;
+            OrderId = orderId;
+            Quantity = quantity;
+            Price = price;
+        }
     }
 }

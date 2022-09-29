@@ -5,10 +5,10 @@ namespace PetStoreApi.DTO.OrderItemDTO
     public class OrderItemDto
     {
         public double Price { get; set; }
-        public string ImagePath { get; set; }
+        public string? ImagePath { get; set; }
         public int Quantity { get; set; }
         public Guid ProductId { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public static OrderItemDto CreateFromEntity(OrderItem src) 
         {
             OrderItemDto dto = new OrderItemDto();
