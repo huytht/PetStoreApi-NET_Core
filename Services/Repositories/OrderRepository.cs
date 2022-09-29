@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PetStoreApi.Controllers;
@@ -61,15 +62,9 @@ namespace PetStoreApi.Services.Repositories
                     list = _context.Orders.Select(o => o).Where(o => o.OrderStatusId == orderStatus).OrderByDescending(o => o.OrderDate);
                 }
 
-                foreach (var item in list)
-                {
-                    item.Payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == item.PaymentId);
-                    item.OrderStatus = await _context.OrderStatuses.FirstOrDefaultAsync(os => os.Id == item.OrderStatusId);
-                }
+                var result = await UpdateDataOrderList(list);
 
-                List<OrderDto> resultList = list.Select(o => OrderDto.CreateFromEntity(o)).ToList();
-
-                return new AppServiceResult<List<OrderDto>>(true, 0, "Success!", resultList);
+                return new AppServiceResult<List<OrderDto>>(true, 0, "Success!", result.ToList());
             }
             catch (Exception ex)
             {
@@ -102,14 +97,8 @@ namespace PetStoreApi.Services.Repositories
                 {
                     list = _context.Orders.Select(o => o).Where(o => o.UserId == appUser.Id && o.OrderStatusId == orderStatus).OrderByDescending(o => o.OrderDate);
                 }
-                
-                foreach (var item in list)
-                {
-                    item.Payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == item.PaymentId);
-                    item.OrderStatus = await _context.OrderStatuses.FirstOrDefaultAsync(os => os.Id == item.OrderStatusId);
-                }
 
-                IEnumerable<OrderDto> dtoList = list.Select(o => OrderDto.CreateFromEntity(o));
+                IEnumerable<OrderDto> dtoList = await UpdateDataOrderList(list);
                 PaginatedList<OrderDto> resultList = new PaginatedList<OrderDto>(dtoList, pageParam.PageIndex, pageParam.PageSize);
 
                 return new AppServiceResult<PaginatedList<OrderDto>>(true, 0, "Success!", resultList);
@@ -156,6 +145,24 @@ namespace PetStoreApi.Services.Repositories
 
                 return AppBaseResult.GenarateIsFailed(99, "Unknown");
             }
+        }
+        public async Task<IEnumerable<OrderDto>> UpdateDataOrderList(IEnumerable<Order> list)
+        {
+            foreach (var item in list)
+            {
+                item.Payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == item.PaymentId);
+                item.OrderStatus = await _context.OrderStatuses.FirstOrDefaultAsync(os => os.Id == item.OrderStatusId);
+                item.OrderItems = await _context.OrderItems.Select(i => i).Where(i => i.OrderId == item.Id).ToListAsync();
+                foreach (var oItem in item.OrderItems)
+                {
+                    oItem.Product = await _context.Products.FirstOrDefaultAsync(p => p.Id == oItem.ProductId);
+                    oItem.Product.ProductImages = new HashSet<ProductImage>();
+                    oItem.Product.ProductImages.Add(_context.ProductImages.First(productImage => productImage.ProductId == oItem.Product.Id));
+                }
+            }
+            var resultList = list.Select(o => OrderDto.CreateFromEntity(o));
+
+            return resultList;
         }
     }
 }

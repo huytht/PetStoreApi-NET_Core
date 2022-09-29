@@ -18,8 +18,9 @@ namespace PetStoreApi.DTO.OrderItemDTO
 
             if (src.Product != null)
             {
+                dto.ProductId = src.Product.Id;
                 dto.Name = src.Product.Name;
-                dto.ImagePath = src.Product.ProductImages.First(e => e.ProductId == src.Product.Id).ImagePath;
+                dto.ImagePath = src.Product.ProductImages.FirstOrDefault(e => e.ProductId == src.Product.Id).ImagePath;
             }
 
             return dto;
