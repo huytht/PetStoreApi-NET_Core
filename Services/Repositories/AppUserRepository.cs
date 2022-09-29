@@ -97,21 +97,20 @@ namespace PetStoreApi.Services.Repositories
             try
             {
                 UserInfoResponseDto userInfo = new UserInfoResponseDto();
-                var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Id == userId);
+                var user = await _context.AppUsers.Include("UserInfo").FirstOrDefaultAsync(u => u.Id == userId);
                 if (user == null)
                 {
                     _logger.LogWarning("AppUser is null, Cannot further process!");
                     return new AppServiceResult<UserInfoResponseDto>(false, 101,
                             "User is not exist!", null);
                 }
-                user.UserInfo = await _context.UserInfos.FirstOrDefaultAsync(ui => ui.Id == user.UserInfoId);
-                userInfo.UserId = user.Id;
-                userInfo.Email = user.Email;
-                userInfo.Username = user.Username;
-                
+
                 if (user.UserInfo != null)
                 {
                     // TODO: Implement mapping
+                    userInfo.UserId = user.Id;
+                    userInfo.Email = user.Email;
+                    userInfo.Username = user.Username;
                     userInfo.FirstName = user.UserInfo.FirstName;
                     userInfo.LastName = user.UserInfo.LastName;
                     userInfo.AvatarImg = user.UserInfo.AvatarImg;
@@ -326,7 +325,7 @@ namespace PetStoreApi.Services.Repositories
 
                 if (currentUsername != null)
                 {
-                    var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+                    var user = await _context.AppUsers.Include("UserInfo").FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
 
                     if (userInfo.UserId != user?.Id)
                     {
@@ -346,7 +345,6 @@ namespace PetStoreApi.Services.Repositories
                     }
 
                     user.Email = userInfo.Email;
-                    user.UserInfo = await _context.UserInfos.FirstOrDefaultAsync(u => u.Id == user.UserInfoId);
                     user.UserInfo.FirstName = userInfo.FirstName;
                     user.UserInfo.LastName = userInfo.LastName;
                     user.UserInfo.Phone = userInfo.Phone;
@@ -377,7 +375,7 @@ namespace PetStoreApi.Services.Repositories
                     if (currentUsername != null)
                     {
 
-                        var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+                        var user = await _context.AppUsers.Include("UserInfo").FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
                         if (user == null)
                         {
                             _logger.LogWarning("User is not exist, Cannot further process!");
@@ -386,7 +384,6 @@ namespace PetStoreApi.Services.Repositories
                         }
 
                         string imagePath = _fileRepository.Upload(user.Username, file);
-                        user.UserInfo = await _context.UserInfos.FirstOrDefaultAsync(u => u.Id == user.UserInfoId);
                         user.UserInfo.AvatarImg = imagePath;
 
                         await _context.SaveChangesAsync();
@@ -412,7 +409,7 @@ namespace PetStoreApi.Services.Repositories
 
         public async Task<AppBaseResult> VerifyEmail(string token)
         {
-            VerificationToken vToken = await _context.VerificationTokens.FirstOrDefaultAsync(v => v.Token == token);
+            VerificationToken vToken = await _context.VerificationTokens.Include("AppUser").FirstOrDefaultAsync(v => v.Token == token);
 
             if (vToken != null)
             {
@@ -425,9 +422,7 @@ namespace PetStoreApi.Services.Repositories
 
                 vToken.IsVerify = true;
                 vToken.VerifyDate = DateTime.Now;
-
-                var user = _context.AppUsers.SingleOrDefault(nd => nd.Id == vToken.UserId);
-                user.Enabled = true;
+                vToken.AppUser.Enabled = true;
 
                 await _context.SaveChangesAsync();
 

@@ -125,30 +125,10 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
-                var product = _context.Products.OrderBy(product => product.Id).FirstOrDefault(product => product.Id.Equals(id));
+                var product = _context.Products.Include("Breed").Include("Category").Include("ProductImages").Include("ProductOrigins").Include("ProductOrigins.Origin").OrderBy(product => product.Id).SingleOrDefault(product => product.Id.Equals(id));
 
-                #region FindList
-                var imageList = _context.ProductImages.Select(image => image).Where(image => image.ProductId.Equals(id));
-
-                var productOriginList = _context.ProductOrigins.Select(po => po).Where(po => po.ProductId.Equals(id));
-                foreach (var productOrigin in productOriginList)
-                {
-                    var origin = _context.Origins.OrderBy(o => o.Id).FirstOrDefault(o => o.Id == productOrigin.OriginId);
-                    productOrigin.Origin = origin;
-                }
-
-                IEnumerable<Product> suggestionList = _context.Products.Select(p => p).Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
-                AddImageToList(ref suggestionList);
+                IEnumerable<Product> suggestionList = _context.Products.Include("ProductImages").Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
                 
-                #endregion
-                product.Breed = _context.Breeds.FirstOrDefault(b => b.Id.Equals(product.BreedId));
-                product.Category = _context.Categories.FirstOrDefault(c => c.Id.Equals(product.CategoryId));
-                #region AddList
-                product.ProductImages.ToList().AddRange(imageList.ToList());
-                product.ProductOrigins.ToList().AddRange(productOriginList.ToList());
-                //product.ProductSuggestions.ToList().AddRange(suggestionList.ToList());
-                #endregion
-
                 ProductDto result = ProductDto.CreateFromEntity(product, suggestionList.Select(p => ProductShortDto.CreateFromEntity(p)));
 
                 return new AppServiceResult<ProductDto>(true, 0, "Succeed!", result);
@@ -167,18 +147,18 @@ namespace PetStoreApi.Services.Repositories
                 IEnumerable<Product> list;
                 switch (type)
                 {
-                    case "all": list = await _context.Products.Select(product => product).ToListAsync();
+                    case "all": list = await _context.Products.Include("ProductImages").ToListAsync();
                         break;
-                    case "dog": list = await _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("chó")).ToListAsync();
+                    case "dog": list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("chó")).ToListAsync();
                         break;
-                    case "cat": list = await _context.Products.Select(product => product).Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
+                    case "cat": list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
                                 break;
-                    case "accessory": list = await _context.Products.Select(product => product).Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
+                    case "accessory": list = await _context.Products.Include("ProductImages").Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
                                 break;
-                    default: list = await _context.Products.Select(product => product).ToListAsync();
+                    default: list = await _context.Products.Include("ProductImages").ToListAsync();
                              break;
                 }
-                AddImageToList(ref list);
+                
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
 
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
@@ -192,15 +172,6 @@ namespace PetStoreApi.Services.Repositories
             }
         }
 
-        public void AddImageToList(ref IEnumerable<Product> list)
-        {
-            foreach (var p in list)
-            {
-                ProductImage image = _context.ProductImages.First(productImage => productImage.ProductId == p.Id);
-                p.ProductImages.Add(image);
-            }
-        }
-
         public async Task<AppServiceResult<PaginatedList<ProductShortDto>>> GetProductFilterList(PageParam pageParam, FilterParam filterParam)
         {
             try
@@ -210,16 +181,15 @@ namespace PetStoreApi.Services.Repositories
                 {
                     if (filterParam.CategoryId == 0)
                     {
-                        list = await _context.Products.Select(p => p).ToListAsync();
+                        list = await _context.Products.Include("ProductImages").ToListAsync();
                     } else
                     {
-                        list = await _context.Products.Select(p => p).Where(p => p.CategoryId == filterParam.CategoryId).ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Where(p => p.CategoryId == filterParam.CategoryId).ToListAsync();
                     }
                 } else
                 {
-                    list = await _context.Products.Select(p => p).Where(p => p.BreedId == filterParam.BreedId).ToListAsync();
+                    list = await _context.Products.Include("ProductImages").Where(p => p.BreedId == filterParam.BreedId).ToListAsync();
                 }
-                AddImageToList(ref list);
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
 
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
@@ -237,9 +207,8 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
-                IEnumerable<Product> list = await _context.Products.Select(p => p).Where(p => p.Name.Contains(keyword) || p.Breed.Name.Contains(keyword) || p.Category.Name.Contains(keyword)).ToListAsync();
+                IEnumerable<Product> list = await _context.Products.Include("ProductImages").Where(p => p.Name.Contains(keyword) || p.Breed.Name.Contains(keyword) || p.Category.Name.Contains(keyword)).ToListAsync();
 
-                AddImageToList(ref list);
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
                 
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);

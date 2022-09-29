@@ -25,6 +25,8 @@ namespace PetStoreApi.DTO.OrderDTO
             dto.OrderDate = src.OrderDate;
             dto.TotalPrice = src.TotalPrice;
             dto.TotalQuantity = src.TotalQuantity;
+            dto.Reciever = src.Reciever;
+            dto.Phone = src.Phone;
             dto.OrderStatus = OrderStatusDto.CreateFromEntity(src.OrderStatus);
             dto.PaymentId = src.PaymentId;
             
