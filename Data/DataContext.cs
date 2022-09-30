@@ -59,12 +59,14 @@ namespace PetStoreApi.Helpers
                 entity.HasOne(e => e.Breed)
                     .WithMany(e => e.Products)
                     .HasForeignKey(e => e.BreedId)
-                    .HasConstraintName("FK_Product_Breed");
+                    .HasConstraintName("FK_Product_Breed")
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.Category)
                     .WithMany(e => e.Products)
                     .HasForeignKey(e => e.CategoryId)
-                    .HasConstraintName("FK_Product_Category");
+                    .HasConstraintName("FK_Product_Category")
+                    .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<Order>(entity =>
             {
@@ -81,11 +83,13 @@ namespace PetStoreApi.Helpers
                 entity.HasOne(o => o.OrderStatus)
                     .WithMany(os => os.Orders)
                     .HasForeignKey(o => o.OrderStatusId)
-                    .HasConstraintName("FK_Order_OrderStatus");
+                    .HasConstraintName("FK_Order_OrderStatus")
+                    .OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(o => o.Payment)
                    .WithMany(p => p.Orders)
                    .HasForeignKey(o => o.PaymentId)
-                   .HasConstraintName("FK_Order_Payment");
+                   .HasConstraintName("FK_Order_Payment")
+                   .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<OrderItem>(entity =>
             {
@@ -95,12 +99,14 @@ namespace PetStoreApi.Helpers
                 entity.HasOne(e => e.Order)
                     .WithMany(e => e.OrderItems)
                     .HasForeignKey(e => e.OrderId)
-                    .HasConstraintName("FK_OrderItem_Order");
+                    .HasConstraintName("FK_OrderItem_Order")
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.Product)
                     .WithMany(e => e.OrderItems)
                     .HasForeignKey(e => e.ProductId)
-                    .HasConstraintName("FK_OrderItem_Product");
+                    .HasConstraintName("FK_OrderItem_Product")
+                    .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<ProductImage>(entity =>
             {
@@ -120,12 +126,14 @@ namespace PetStoreApi.Helpers
                 entity.HasOne(e => e.Origin)
                     .WithMany(e => e.ProductOrigins)
                     .HasForeignKey(e => e.OriginId)
-                    .HasConstraintName("FK_ProductOrigin_Origin");
+                    .HasConstraintName("FK_ProductOrigin_Origin")
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.Product)
                     .WithMany(e => e.ProductOrigins)
                     .HasForeignKey(e => e.ProductId)
-                    .HasConstraintName("FK_ProductOrigin_Product");
+                    .HasConstraintName("FK_ProductOrigin_Product")
+                    .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<AppUser>(entity =>
             {

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using static System.Net.Mime.MediaTypeNames;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Collections.Generic;
+using Korzh.EasyQuery.Linq;
 
 namespace PetStoreApi.Services.Repositories
 {
