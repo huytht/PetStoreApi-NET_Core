@@ -26,14 +26,14 @@ namespace PetStoreApi.Controllers
 
             AppServiceResult<PaginatedList<ProductShortDto>> result = await _productRepository.GetProductList(pageParam, productType);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpGet("{id}")]
         public IActionResult GetProductDetail(Guid id)
         {
             AppServiceResult<ProductDto> result = _productRepository.GetProductById(id);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpGet("{categoryId}/{breedId}/list")]
         public async Task<IActionResult> GetProductFilterList(int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT,
@@ -44,7 +44,7 @@ namespace PetStoreApi.Controllers
 
             AppServiceResult<PaginatedList<ProductShortDto>> result = await _productRepository.GetProductFilterList(pageParam, filterParam);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpGet("search/{keyword}")]
         public async Task<IActionResult> SearchProduct(string keyword, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
@@ -53,7 +53,7 @@ namespace PetStoreApi.Controllers
 
             AppServiceResult<PaginatedList<ProductShortDto>> result = await _productRepository.SearchProduct(pageParam, keyword);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpPost]
         [Authorize]

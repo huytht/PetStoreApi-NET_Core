@@ -24,8 +24,6 @@ namespace PetStoreApi.Controllers
         [HttpGet("list/breed")]
         public async Task<IActionResult> GetListBreedByCategory(int categoryId = 0)
         {
-
-
             AppServiceResult<List<Breed?>> result = await _commonRepository.GetAllBreedByCategory(categoryId);
 
             return result.success ? Ok(result) : BadRequest(result);
@@ -34,17 +32,14 @@ namespace PetStoreApi.Controllers
         [HttpGet("list/all/breed")]
         public async Task<IActionResult> GetListBreed()
         {
-
             AppServiceResult<List<BreedDto>> result = await _commonRepository.GetBreedList();
 
             return result.success ? Ok(result) : BadRequest(result);
-
         }
 
         [HttpGet("list/origin")]
         public async Task<IActionResult> GetListOrigin()
         {
-
             AppServiceResult<List<OriginDto>> result = await _commonRepository.GetOriginList();
 
             return result.success ? Ok(result) : BadRequest(result);
@@ -53,7 +48,6 @@ namespace PetStoreApi.Controllers
         [HttpGet("list/category")]
         public async Task<IActionResult> GetListCategory()
         {
-
             AppServiceResult<List<CategoryDto>> result = await _commonRepository.GetCategoryList();
 
             return result.success ? Ok(result) : BadRequest(result);
@@ -63,7 +57,6 @@ namespace PetStoreApi.Controllers
         [HttpGet("list/order-status")]
         public async Task<IActionResult> getListOrderStatus()
         {
-
             AppServiceResult<List<OrderStatusDto>> result = await _commonRepository.GetOrderStatusList();
 
             return result.success ? Ok(result) : BadRequest(result);

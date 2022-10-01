@@ -22,7 +22,7 @@ namespace PetStoreApi.Controllers
         {
             AppServiceResult<PurchaseResponse> result = await _checkoutRepository.PlaceOrder(purchase);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
     }
 }

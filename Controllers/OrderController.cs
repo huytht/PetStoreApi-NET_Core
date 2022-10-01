@@ -24,28 +24,28 @@ namespace PetStoreApi.Controllers
 
             AppServiceResult<List<OrderDto>> result = await _orderRepository.GetListAllOrder(orderStatus);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
 	    }
         [HttpPut("confirm")]
         [Authorize]
         public async Task<IActionResult> ConfirmOrder(Guid orderTrackingNumber) {
 		    AppBaseResult result = await _orderRepository.UpdateOrderStatus(orderTrackingNumber, 3);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
 	    }
         [HttpPut("cancel")]
         [Authorize]
         public async Task<IActionResult> CancelOrder(Guid orderTrackingNumber) {
             AppBaseResult result = await _orderRepository.UpdateOrderStatus(orderTrackingNumber, 5);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpDelete]
         [Authorize]
         public IActionResult DeleteOrder(Guid orderId) {
             AppBaseResult result = _orderRepository.DeleteOrder(orderId);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using PetStoreApi.Domain;
 using PetStoreApi.Configuration;
 using PetStoreApi.Controllers;
+using PayPal.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,9 @@ builder.Services.AddCors(options =>
        .AllowAnyMethod()
        .AllowAnyHeader());
 });
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<ModelValidationAttribute>();
+builder.Services.AddScoped<APIContext>();
 builder.Logging.AddJsonConsole();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -47,6 +50,8 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
 builder.Services.AddScoped<ICheckoutRepository, CheckoutRepository>();
 builder.Services.AddScoped<ICommonRepository, CommonRepository>();
+builder.Services.AddScoped<IPaypalRepository, PaypalRepository>();
+builder.Services.AddScoped<IMomoRepository, MomoRepository>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 #endregion
 
@@ -56,6 +61,9 @@ var emailConfig = builder.Configuration
 builder.Services.AddSingleton(emailConfig);
 
 builder.Services.Configure<AppSetting>(builder.Configuration.GetSection("AppSettings"));
+builder.Services.Configure<PayPalAuthOption>(builder.Configuration.GetSection("PayPalAuthOptions"));
+builder.Services.Configure<Variable>(builder.Configuration.GetSection("Variables"));
+builder.Services.Configure<MomoAuthOption>(builder.Configuration.GetSection("MomoAuthOptions"));
 
 var secretKey = builder.Configuration["AppSettings:SecretKey"];
 var secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);

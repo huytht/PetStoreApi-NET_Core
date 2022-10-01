@@ -1,6 +1,5 @@
 ﻿using PetStoreApi.DTO.ProductDTO;
 using System.Numerics;
-using ToStringSourceGenerator.Attributes;
 
 namespace PetStoreApi.Data.Entity
 {

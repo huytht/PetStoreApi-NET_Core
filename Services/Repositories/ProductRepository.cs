@@ -1,17 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using PetStoreApi.Constants;
-using PetStoreApi.Data.Entity;
+﻿using PetStoreApi.Data.Entity;
 using PetStoreApi.DTO.ProductDTO;
 using PetStoreApi.Domain;
 using PetStoreApi.Helpers;
-using System.Collections;
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using System.Collections.Generic;
-using Korzh.EasyQuery.Linq;
 
 namespace PetStoreApi.Services.Repositories
 {

@@ -27,28 +27,28 @@ namespace PetStoreApi.Controllers
         {
             AppBaseResult result = await _appUserRepository.VerifyEmail(token);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]UserLoginDto userLogin)
         {
             AppServiceResult<UserLoginResponseDto> result = await _appUserRepository.Login(userLogin);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegister)
         {
             AppBaseResult result = await _appUserRepository.Register(userRegister);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(TokenModel model)
         {
             AppServiceResult<TokenModel> result = await _appUserRepository.RenewToken(model);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpGet("order")]
         [Authorize]
@@ -58,7 +58,7 @@ namespace PetStoreApi.Controllers
 
             AppServiceResult<PaginatedList<OrderDto>> result = await _orderRepository.GetListOrder(orderStatus, pageParam);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpGet("profiles")]
         [Authorize]
@@ -66,7 +66,7 @@ namespace PetStoreApi.Controllers
         {
             AppServiceResult<UserInfoResponseDto> result = await _appUserRepository.GetProfile(userId);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpPut("profiles")]
         [Authorize]
@@ -74,7 +74,7 @@ namespace PetStoreApi.Controllers
         {
             var result = await _appUserRepository.SaveProfile(userInfo);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpPut("password")]
         [Authorize]
@@ -82,7 +82,7 @@ namespace PetStoreApi.Controllers
         {
             var result = await _appUserRepository.ChangePassword(changePassword);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
         [HttpPost("upload-profile-image")]
         [Authorize]
@@ -90,7 +90,7 @@ namespace PetStoreApi.Controllers
         {
             var result = await _appUserRepository.UploadImage(file);
 
-            return Ok(result);
+            return result.success ? Ok(result) : BadRequest(result);
         }
     }
 }
