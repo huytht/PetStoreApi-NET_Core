@@ -42,7 +42,7 @@ namespace PetStoreApi.Services.Repositories
                 {
                     result = await _context.Breeds.Select(b => b).ToListAsync();
                 }
-                return new AppServiceResult<List<Breed?>>(true, 0, "Succeed!", result);
+                return new AppServiceResult<List<Breed?>>(true, 0, "Succeed!", result[0] == null ? null : result);
 
             }
             catch (Exception e)

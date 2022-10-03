@@ -34,6 +34,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.AmountInStock = src.AmountInStock;
             dto.Description = src.Description;
             dto.Status = src.Status;
+            dto.Gender = src.Gender;
             dto.Price = src.Price;
             if (src.Category != null)
                 dto.Category = CategoryDto.CreateFromEntity(src.Category);
@@ -73,6 +74,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.Description = src.Description;
             dto.Status = src.Status;
             dto.Price = src.Price;
+            dto.Gender = src.Gender;
             if (src.Category != null)
                 dto.Category = CategoryDto.CreateFromEntity(src.Category);
             if (src.Age != null)
