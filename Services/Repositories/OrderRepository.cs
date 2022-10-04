@@ -135,7 +135,6 @@ namespace PetStoreApi.Services.Repositories
 
                 order.OrderStatus = orderStatus;
 
-                await _context.Orders.AddAsync(order);
                 await _context.SaveChangesAsync();
 
                 return AppBaseResult.GenarateIsSucceed();
