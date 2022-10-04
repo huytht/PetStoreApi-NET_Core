@@ -220,7 +220,6 @@ namespace PetStoreApi.Services.Repositories
                 await _context.AppUsers.AddAsync(user);
                 await _context.SaveChangesAsync();
 
-                //string toEmailFormat = user.Email + " <" + user.Email + ">";
                 Message message = new Message(user.Email, "Send Email Verify", null, null, user);
 
                 await _emailSender.SendEmailAsync(message);
