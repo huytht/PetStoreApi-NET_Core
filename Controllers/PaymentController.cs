@@ -81,7 +81,7 @@ namespace PetStoreApi.Controllers
         {
             Payment payment = _paypalRepository.ExecutePayment(paymentId, PayerID);
 
-            //_orderRepository.UpdateOrderStatus(orderTrackingNumber, 2);
+            _orderRepository.UpdateOrderStatus(orderTrackingNumber, 2);
 
             string tempateFilePath = _hostingEnvironment.ContentRootPath + "/Templates/success.html";
 

@@ -32,6 +32,7 @@ namespace PetStoreApi.Helpers
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<OrderStatus> OrderStatuses { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<AppUserProduct> AppUserProducts { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -200,6 +201,23 @@ namespace PetStoreApi.Helpers
             {
                 entity.ToTable("Payment");
                 entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<AppUserProduct>(entity =>
+            {
+                entity.ToTable("AppUserProduct");
+                entity.HasKey(e => new { e.ProductId, e.UserId });
+
+                entity.HasOne(e => e.Product)
+                    .WithMany(e => e.AppUserProducts)
+                    .HasForeignKey(e => e.ProductId)
+                    .HasConstraintName("FK_AppUserProduct_Product")
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.AppUser)
+                    .WithMany(e => e.AppUserProducts)
+                    .HasForeignKey(e => e.UserId)
+                    .HasConstraintName("FK_AppUserProduct_AppUser")
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
 

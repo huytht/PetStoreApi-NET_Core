@@ -3,6 +3,9 @@ using PetStoreApi.DTO.ProductDTO;
 using PetStoreApi.Domain;
 using PetStoreApi.Helpers;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using PayPal.Api;
+using sun.misc;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -12,13 +15,16 @@ namespace PetStoreApi.Services.Repositories
 
         private readonly IFileRepository _fileRepository;
 
+        private readonly IHttpContextAccessor? _httpContextAccessor;
+
         private readonly ILogger<ProductRepository> _logger;
 
-        public ProductRepository(DataContext context, ILogger<ProductRepository> logger, IFileRepository fileRepository)
+        public ProductRepository(DataContext context, ILogger<ProductRepository> logger, IFileRepository fileRepository, IHttpContextAccessor? httpContextAccessor)
         {
             _context = context;
             _fileRepository = fileRepository;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public AppServiceResult<Product> AddProduct(ProductCreateDto product)
@@ -211,6 +217,86 @@ namespace PetStoreApi.Services.Repositories
             {
                 _logger.LogError(e.Message);
                 return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 99, "Unknown error", null);
+            }
+        }
+
+        public async Task<AppServiceResult<PaginatedList<ProductShortDto>>> GetWishList(PageParam pageParam)
+        {
+            try
+            {
+                string currentUsername =  _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                var appUser = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+
+                if (appUser == null)
+                {
+                    _logger.LogWarning("Not logged in!");
+
+                    return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 101, "Not logged in!", null);
+                }
+
+                IEnumerable<ProductShortDto> wishList = _context.AppUserProducts.Where(i => i.UserId == appUser.Id).Include("Product.ProductImages").Select(i => ProductShortDto.CreateFromEntity(i.Product));
+                PaginatedList<ProductShortDto> result = new PaginatedList<ProductShortDto>(wishList, pageParam.PageIndex, pageParam.PageSize);
+
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", result);
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 99, "Unknown", null);
+            }
+        }
+        public async Task<AppBaseResult> UpdateWishList(Guid productId)
+        {
+            try
+            {
+                string currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                var appUser = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+
+                if (appUser == null)
+                {
+                    _logger.LogWarning("Not logged in!");
+
+                    return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 101, "Not logged in!", null);
+                }
+
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+
+                if (product == null)
+                {
+                    _logger.LogWarning("Product Id is not exist: " + productId + ", Cannot further process!");
+
+                    return AppBaseResult.GenarateIsFailed(101, "Product Id is not exist: " + productId);
+                }
+
+                var existWishList = await _context.AppUserProducts.FirstOrDefaultAsync(e => e.UserId.Equals(appUser.Id) && e.ProductId.Equals(productId));
+                
+                AppUserProduct newWL = new AppUserProduct();
+                newWL.ProductId = productId;
+                newWL.UserId = appUser.Id;
+                if (existWishList != null)
+                {
+                    newWL = existWishList;
+                    newWL.Favourite = newWL.Favourite == null ? true : !newWL.Favourite;
+                }
+                else
+                {
+                    newWL.AppUser = appUser;
+                    newWL.Product = product;
+                    newWL.Favourite = true;
+                }
+
+                await _context.AppUserProducts.AddAsync(newWL);
+                await _context.SaveChangesAsync();
+
+                return AppBaseResult.GenarateIsSucceed();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
             }
         }
     }

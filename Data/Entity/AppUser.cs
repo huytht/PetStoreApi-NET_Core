@@ -14,12 +14,14 @@
         public ICollection<VerificationToken> VerificationTokens { get; set; }
         public ICollection<Order> Orders { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; }
+        public ICollection<AppUserProduct> AppUserProducts { get; set; }
         public AppUser()
         {
             AppUserRoles = new HashSet<AppUserRole>();
             VerificationTokens = new HashSet<VerificationToken>();
             Orders = new HashSet<Order>();
             RefreshTokens = new HashSet<RefreshToken>();
+            AppUserProducts = new HashSet<AppUserProduct>();
         }
     }
 }

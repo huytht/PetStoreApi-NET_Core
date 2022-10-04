@@ -8,7 +8,7 @@ namespace PetStoreApi.Domain
         public AppServiceResult()
         {
         }
-        public AppServiceResult(bool success, int errorCode, string message, T _data) : base(success, errorCode, message)
+        public AppServiceResult(bool success, int errorCode, string errorMessage, T _data) : base(success, errorCode, errorMessage)
         {
             data = _data;
         }

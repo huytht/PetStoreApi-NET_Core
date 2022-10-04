@@ -4,7 +4,7 @@
     {
         public bool success { get; set; }
         public int errorCode { get; set; }
-        public string message { get; set; }
+        public string errorMessage { get; set; }
 
         public AppBaseResult()
         {
@@ -13,13 +13,13 @@
         {
             success = _success;
             errorCode = _errorCode;
-            message = _message;
+            errorMessage = _message;
         }
         public static AppBaseResult GenarateIsSucceed()
         {
             return new AppBaseResult(true, 0, "Succeed!");
         }
-        public static AppBaseResult GenarateIsFailed(int errorCode, String message)
+        public static AppBaseResult GenarateIsFailed(int errorCode, string message)
         {
             return new AppBaseResult(false, errorCode, message);
         }

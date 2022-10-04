@@ -21,11 +21,13 @@ namespace PetStoreApi.Data.Entity
         public ICollection<OrderItem> OrderItems { get; set; }
         public ICollection<ProductImage> ProductImages { get; set; }
         public ICollection<ProductOrigin> ProductOrigins { get; set; }
+        public ICollection<AppUserProduct> AppUserProducts { get; set; }
         public Product()
         {
             OrderItems = new HashSet<OrderItem>();
             ProductImages = new HashSet<ProductImage>();
             ProductOrigins = new HashSet<ProductOrigin>();
+            AppUserProducts = new HashSet<AppUserProduct>();
         }
     }
 }
