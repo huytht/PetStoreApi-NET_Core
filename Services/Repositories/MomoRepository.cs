@@ -12,6 +12,7 @@ using javax.crypto;
 using System.Text;
 using Newtonsoft.Json;
 using static com.sun.tools.@internal.xjc.reader.xmlschema.bindinfo.BIConversion;
+using sun.misc;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -28,7 +29,7 @@ namespace PetStoreApi.Services.Repositories
             _logger = logger;
         }
 
-        public async Task<AppServiceResult<MomoResponse>> CreatePaymentMomo(double amount, string notifyUrl, string returnUrl)
+        public async Task<AppServiceResult<object>> CreatePaymentMomo(long amount, string notifyUrl, string returnUrl)
         {
             try
             {
@@ -37,39 +38,36 @@ namespace PetStoreApi.Services.Repositories
                 client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
 
-                //long date = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                //string requestId = DateTimeOffset.Now.ToUnixTimeMilliseconds() + "id";
-                //string orderId = DateTimeOffset.Now.ToUnixTimeMilliseconds() + ":012345678";
-                //bool autoCapture = true;
-                //string requestType = "captureWallet";
+                long date = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                string requestId = date + "id";
+                string orderId = date + ":012345678";
+                string requestType = "captureWallet";
                 string orderInfo = "Thanh toán qua ví MoMo";
-                //string extraData = "ew0KImVtYWlsIjogImh1b25neGRAZ21haWwuY29tIg0KfQ==";
-                string signature = "accessKey=" + _options.DevAccessKey + "&amount=" + amount + "&extraData=ew0KImVtYWlsIjogImh1b25neGRAZ21haWwuY29tIg0KfQ==&ipnUrl=" + notifyUrl + "&orderId=" + DateTimeOffset.Now.ToUnixTimeMilliseconds() + ":012345678" + "&orderInfo=" + orderInfo + "&partnerCode=" + _options.DevPartnerCode + "&redirectUrl=" + returnUrl + "&requestId=" + DateTimeOffset.Now.ToUnixTimeMilliseconds() + "id" + "&requestType=captureWallet";
-                Mac hMacSHA256 = Mac.getInstance("HmacSHA256");
-                byte[] hmacKeyBytes = Encoding.UTF8.GetBytes(_options.DevPartnerCode);
-                SecretKeySpec secretKeySpec = new SecretKeySpec(hmacKeyBytes, "HmacSHA256");
-                hMacSHA256.init(secretKeySpec);
-                byte[] dataBytes = Encoding.UTF8.GetBytes(signature);
-                byte[] res = hMacSHA256.doFinal(dataBytes);
+                string extraData = "ew0KImVtYWlsIjogImh1b25neGRAZ21haWwuY29tIg0KfQ==";
+                string signature = "accessKey=" + _options.DevAccessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + notifyUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + _options.DevPartnerCode + "&redirectUrl=" + returnUrl + "&requestId=" + requestId + "&requestType=" + requestType;
 
-                var hexString = BitConverter.ToString(res);
-                signature = hexString.Replace("-", "");
-                Console.WriteLine("=====================> " + signature);
+                byte[] hmacKeyBytes = Encoding.UTF8.GetBytes(_options.DevSecretKey);
+                var sha256Hash = new HMACSHA256(hmacKeyBytes);
+                byte[] dataBytes = Encoding.UTF8.GetBytes(signature);
+                byte[] res = sha256Hash.ComputeHash(dataBytes);
+
+                signature = Hex.ToHexString(res);
+
                 var myRequest = new MomoRequest
                 (
                     _options.DevPartnerCode,
                     "Test",
                     _options.DevPartnerCode,
-                    "captureWallet",
+                    requestType,
                     notifyUrl,
                     returnUrl,
-                    DateTimeOffset.Now.ToUnixTimeMilliseconds() + ":012345678",
+                    orderId,
                     amount,
                     "vi",
                     true,
-                    "Thanh toán qua ví MoMo",
-                    DateTimeOffset.Now.ToUnixTimeMilliseconds() + "id",
-                    "ew0KImVtYWlsIjogImh1b25neGRAZ21haWwuY29tIg0KfQ==",
+                    orderInfo,
+                    requestId,
+                    extraData,
                     signature
                 );
                 //var stringContent = new StringContent(JsonConvert.SerializeObject(myRequest), Encoding.UTF8, "application/json");
@@ -80,15 +78,14 @@ namespace PetStoreApi.Services.Repositories
 
                 var response = client.PostAsync(_options.DevMomoEndpoint + "/create", content).Result;
                 var responseContent = response.Content.ReadAsStringAsync().Result;
-                var result = JsonConvert.DeserializeObject<MomoResponse>(responseContent);
 
-                return new AppServiceResult<MomoResponse>(true, 0, "Succeed!", result);
+                return new AppServiceResult<object>(true, 0, "Succeed!", JsonConvert.DeserializeObject(responseContent));
 
             }
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                return new AppServiceResult<MomoResponse>(false, 99, "Unknown", null);
+                return new AppServiceResult<object>(false, 99, "Unknown", null);
             }
         }
     }

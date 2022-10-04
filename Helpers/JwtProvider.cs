@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using PetStoreApi.Data.Entity;
 using PetStoreApi.Domain;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,6 +26,12 @@ namespace PetStoreApi.Helpers
             _context = context;
             _appSetting = optionsMonitor.CurrentValue;
         }
+        private string[] getClaimsFromUser(AppUser appUser)
+        {
+            List<string> roles = _context.AppUserRoles.Where(u => u.UserId.Equals(appUser.Id)).Select(u => u.AppRole.Name).ToList();
+
+            return roles.ToArray();
+        }
 
         public async Task<TokenModel> GenerateToken(AppUser user)
         {
@@ -31,16 +39,19 @@ namespace PetStoreApi.Helpers
 
             var secretKeyBytes = Encoding.UTF8.GetBytes(_appSetting.SecretKey);
 
+            string[] rolesArray = getClaimsFromUser(user);
+
+            string rolesJson = JsonConvert.SerializeObject(rolesArray);
+
             var tokenDescription = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] {
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
                     new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim("Username", user.Username),
-                    new Claim("Id", user.Id.ToString()),
-
-                    //roles
+                    new Claim("username", user.Username),
+                    new Claim("id", user.Id.ToString()),
+                    new Claim("roles", rolesJson, JsonClaimValueTypes.JsonArray)
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKeyBytes), SecurityAlgorithms.HmacSha512Signature)

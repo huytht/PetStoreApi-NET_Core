@@ -9,7 +9,7 @@
         public string ipnUrl { get; set; }
         public string redirectUrl { get; set; }
         public string orderId { get; set; }
-        public double amount { get; set; }
+        public long amount { get; set; }
         public string lang { get; set; }
         public bool autoCapture { get; set; }
         public string orderInfo { get; set; }
@@ -17,7 +17,7 @@
         public string extraData { get; set; }
         public string signature { get; set; }
 
-        public MomoRequest(string partnerCode, string partnerName, string storeId, string requestType, string ipnUrl, string redirectUrl, string orderId, double amount, string lang, bool autoCapture, string orderInfo, string requestId, string extraData, string signature)
+        public MomoRequest(string partnerCode, string partnerName, string storeId, string requestType, string ipnUrl, string redirectUrl, string orderId, long amount, string lang, bool autoCapture, string orderInfo, string requestId, string extraData, string signature)
         {
             this.partnerCode = partnerCode;
             this.partnerName = partnerName;

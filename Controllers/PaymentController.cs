@@ -59,12 +59,12 @@ namespace PetStoreApi.Controllers
             return BadRequest();
         }
         [HttpPost("momo")]
-        public async Task<IActionResult> CreatePaymentMomo(double amount, Guid orderTrackingNumber)
+        public async Task<IActionResult> CreatePaymentMomo(long amount, Guid orderTrackingNumber)
         {
             string cancelUrl = $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}/{URL_PAYPAL_CANCEL}";
             string successUrl = $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}/{URL_PAYPAL_SUCCESS}";
 
-            AppServiceResult<MomoResponse> result = await _momoRepository.CreatePaymentMomo(amount, cancelUrl, successUrl + "?orderTrackingNumber=" + orderTrackingNumber);
+            AppServiceResult<object> result = await _momoRepository.CreatePaymentMomo(amount, cancelUrl, successUrl + "?orderTrackingNumber=" + orderTrackingNumber);
 
             return result.success ? Ok(result) : BadRequest(result);
         }

@@ -5,6 +5,6 @@ namespace PetStoreApi.Services
 {
     public interface IMomoRepository
     {
-        Task<AppServiceResult<MomoResponse>> CreatePaymentMomo(double amount, string notifyUrl, string returnUrl);
+        Task<AppServiceResult<object>> CreatePaymentMomo(long amount, string notifyUrl, string returnUrl);
     }
 }
