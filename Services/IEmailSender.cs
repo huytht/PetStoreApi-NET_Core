@@ -5,7 +5,7 @@ namespace PetStoreApi.Services
 {
     public interface IEmailSender
     {
-        Task SendEmailAsync(Message message);
-        Task<bool> SendAsync(MimeMessage mailMessage);
+        void SendEmail(Message message);
+        bool Send(MimeMessage mailMessage);
     }
 }

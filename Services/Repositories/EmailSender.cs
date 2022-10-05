@@ -1,4 +1,5 @@
 ﻿using MailKit.Net.Smtp;
+using MailKit.Security;
 using MimeKit;
 using PetStoreApi.Configuration;
 using PetStoreApi.Data.Entity;
@@ -22,7 +23,7 @@ namespace PetStoreApi.Services.Repositories
             _dataContext = dataContext;
         }
 
-        public async Task SendEmailAsync(Message message)
+        public void SendEmail(Message message)
         {
             VerificationToken vToken = new VerificationToken();
             Guid newToken = Guid.NewGuid();
@@ -33,39 +34,32 @@ namespace PetStoreApi.Services.Repositories
 
             var mailMessage = CreateEmailMessage(message);
             
-            bool isSuccess = await SendAsync(mailMessage);
+            bool isSuccess = Send(mailMessage);
 
             vToken.IsSend = isSuccess;
             
-            await _dataContext.VerificationTokens.AddAsync(vToken);
-            await _dataContext.SaveChangesAsync();
+            _dataContext.VerificationTokens.Add(vToken);
+            _dataContext.SaveChanges();
 
         }
-        public async Task<bool> SendAsync(MimeMessage mailMessage)
+        public bool Send(MimeMessage mailMessage)
         {
-            using (var client = new SmtpClient())
+            try
             {
-                try
-                {
-                    await client.ConnectAsync(_emailConfig.SmtpServer, _emailConfig.Port, false);
-                    client.AuthenticationMechanisms.Remove("XOAUTH2");
-                    await client.AuthenticateAsync(_emailConfig.UserName, _emailConfig.Password);
+                using var smtp = new SmtpClient();
+                smtp.Connect(_emailConfig.SmtpServer, _emailConfig.Port, SecureSocketOptions.StartTls);
+                smtp.Authenticate(_emailConfig.UserName, _emailConfig.Password);
+                smtp.Send(mailMessage);
+                smtp.Disconnect(true);
 
-                    await client.SendAsync(mailMessage);
-
-                    return true;
-                }
-                catch(Exception ex)
-                {
-                    _logger.LogError(ex.Message);
-                    return false;
-                }
-                finally
-                {
-                    await client.DisconnectAsync(true);
-                    client.Dispose();
-                }
+                return true;
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return false;
+            }
+            
         }
         private MimeMessage CreateEmailMessage(Message message)
         {
