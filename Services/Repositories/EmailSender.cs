@@ -1,4 +1,5 @@
-﻿using MailKit.Net.Smtp;
+﻿using com.sun.org.apache.xml.@internal.serializer.utils;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using PetStoreApi.Configuration;
@@ -47,7 +48,8 @@ namespace PetStoreApi.Services.Repositories
             try
             {
                 using var smtp = new SmtpClient();
-                smtp.Connect(_emailConfig.SmtpServer, _emailConfig.Port, SecureSocketOptions.StartTls);
+                
+                smtp.Connect(_emailConfig.SmtpServer, _emailConfig.Port, SecureSocketOptions.SslOnConnect);
                 smtp.Authenticate(_emailConfig.UserName, _emailConfig.Password);
                 smtp.Send(mailMessage);
                 smtp.Disconnect(true);
