@@ -36,6 +36,8 @@ builder.Services.AddScoped<APIContext>();
 builder.Logging.AddJsonConsole();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.AddAzureWebAppDiagnostics();
 
 #region Repositories
 builder.Services.AddScoped<IBreedRepository, BreedRepository>();
