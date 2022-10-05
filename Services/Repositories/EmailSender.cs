@@ -58,7 +58,7 @@ namespace PetStoreApi.Services.Repositories
             }
             catch (Exception e)
             {
-                _logger.LogError(e.InnerException.Message);
+                _logger.LogError(e.InnerException.StackTrace);
                 return false;
             }
             

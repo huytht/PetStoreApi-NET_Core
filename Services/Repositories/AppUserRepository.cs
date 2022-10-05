@@ -218,7 +218,7 @@ namespace PetStoreApi.Services.Repositories
                 user.Password = BC.HashPassword(userRegister.Password);
 
                 await _context.AppUsers.AddAsync(user);
-                await _context.SaveChangesAsync();
+                //await _context.SaveChangesAsync();
 
                 Message message = new Message(user.Email, "Send Email Verify", null, null, user);
 
@@ -228,8 +228,8 @@ namespace PetStoreApi.Services.Repositories
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
-                _logger.LogError(e.InnerException.Message);
+                //_logger.LogError(e.Message);
+                _logger.LogError(e.InnerException.StackTrace);
                 return AppBaseResult.GenarateIsFailed(99, "Unknown");
             }
         }
