@@ -10,6 +10,7 @@ using PetStoreApi.Domain;
 using PetStoreApi.Configuration;
 using PetStoreApi.Controllers;
 using PayPal.Api;
+using Microsoft.Extensions.Logging.AzureAppServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +38,6 @@ builder.Logging.AddJsonConsole();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-builder.Logging.AddAzureWebAppDiagnostics();
 
 #region Repositories
 builder.Services.AddScoped<IBreedRepository, BreedRepository>();
@@ -66,6 +66,7 @@ builder.Services.Configure<AppSetting>(builder.Configuration.GetSection("AppSett
 builder.Services.Configure<PayPalAuthOption>(builder.Configuration.GetSection("PayPalAuthOptions"));
 builder.Services.Configure<Variable>(builder.Configuration.GetSection("Variables"));
 builder.Services.Configure<MomoAuthOption>(builder.Configuration.GetSection("MomoAuthOptions"));
+builder.Services.Configure<AzureFileLoggerOptions>(builder.Configuration.GetSection("AzureLogging"));
 
 var secretKey = builder.Configuration["AppSettings:SecretKey"];
 var secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
