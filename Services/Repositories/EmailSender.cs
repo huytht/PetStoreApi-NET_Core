@@ -35,11 +35,11 @@ namespace PetStoreApi.Services.Repositories
             vToken.IsVerify = false;
 
             var mailMessage = CreateEmailMessage(message);
-            
+
             bool isSuccess = Send(mailMessage);
 
             vToken.IsSend = isSuccess;
-            
+
             _dataContext.VerificationTokens.Add(vToken);
             _dataContext.SaveChanges();
 
@@ -53,6 +53,7 @@ namespace PetStoreApi.Services.Repositories
                 smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                 smtp.UseDefaultCredentials = false;
                 smtp.Credentials = new NetworkCredential(_emailConfig.UserName, _emailConfig.Password);
+                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Ssl3 | System.Net.SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 smtp.Send(mailMessage);
 
                 return true;
@@ -62,7 +63,7 @@ namespace PetStoreApi.Services.Repositories
                 _logger.LogError(e.InnerException.Message);
                 return false;
             }
-            
+
         }
         private MailMessage CreateEmailMessage(Message message)
         {
@@ -73,7 +74,7 @@ namespace PetStoreApi.Services.Repositories
             emailMessage.IsBodyHtml = true;
 
             string tempateFilePath = _hostingEnvironment.ContentRootPath + "/Templates/VerifyEmail.html";
-            var bodyBuilder = new BodyBuilder { HtmlBody = File.ReadAllText(tempateFilePath).Replace("VERIFICATION_URL", string.Format("https://localhost:7277/api/user/verify/{0}", message.Token))};
+            var bodyBuilder = new BodyBuilder { HtmlBody = File.ReadAllText(tempateFilePath).Replace("VERIFICATION_URL", string.Format("https://localhost:7277/api/user/verify/{0}", message.Token)) };
 
             emailMessage.Body = bodyBuilder.HtmlBody;
             return emailMessage;
