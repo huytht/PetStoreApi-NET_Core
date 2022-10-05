@@ -53,7 +53,6 @@ namespace PetStoreApi.Services.Repositories
                 smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                 smtp.UseDefaultCredentials = false;
                 smtp.Credentials = new NetworkCredential(_emailConfig.UserName, _emailConfig.Password);
-                smtp.Timeout = 10000;
                 smtp.Send(mailMessage);
 
                 return true;
