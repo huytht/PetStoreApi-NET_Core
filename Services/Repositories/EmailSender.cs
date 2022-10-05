@@ -1,11 +1,12 @@
 ﻿using com.sun.org.apache.xml.@internal.serializer.utils;
-using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using PetStoreApi.Configuration;
 using PetStoreApi.Data.Entity;
 using PetStoreApi.Domain;
 using PetStoreApi.Helpers;
+using System.Net;
+using System.Net.Mail;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -43,37 +44,39 @@ namespace PetStoreApi.Services.Repositories
             _dataContext.SaveChanges();
 
         }
-        public bool Send(MimeMessage mailMessage)
+        public bool Send(MailMessage mailMessage)
         {
             try
             {
-                using var smtp = new SmtpClient();
-                
-                smtp.Connect(_emailConfig.SmtpServer, _emailConfig.Port, SecureSocketOptions.SslOnConnect);
-                smtp.Authenticate(_emailConfig.UserName, _emailConfig.Password);
+                SmtpClient smtp = new SmtpClient(_emailConfig.SmtpServer, _emailConfig.Port);
+                smtp.EnableSsl = true;
+                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new NetworkCredential(_emailConfig.UserName, _emailConfig.Password);
+                smtp.Timeout = 10000;
                 smtp.Send(mailMessage);
-                smtp.Disconnect(true);
 
                 return true;
             }
             catch (Exception e)
             {
-                _logger.LogError(e.InnerException.StackTrace);
+                _logger.LogError(e.InnerException.Message);
                 return false;
             }
             
         }
-        private MimeMessage CreateEmailMessage(Message message)
+        private MailMessage CreateEmailMessage(Message message)
         {
-            var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress(_emailConfig.From, _emailConfig.From));
-            emailMessage.To.AddRange(message.To);
+            var emailMessage = new MailMessage();
+            emailMessage.From = new MailAddress(_emailConfig.From);
+            emailMessage.To.Add(new MailAddress(message.To));
             emailMessage.Subject = message.Subject;
+            emailMessage.IsBodyHtml = true;
 
             string tempateFilePath = _hostingEnvironment.ContentRootPath + "/Templates/VerifyEmail.html";
             var bodyBuilder = new BodyBuilder { HtmlBody = File.ReadAllText(tempateFilePath).Replace("VERIFICATION_URL", string.Format("https://localhost:7277/api/user/verify/{0}", message.Token))};
 
-            emailMessage.Body = bodyBuilder.ToMessageBody();
+            emailMessage.Body = bodyBuilder.HtmlBody;
             return emailMessage;
         }
 

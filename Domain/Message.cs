@@ -1,28 +1,20 @@
 ﻿using MimeKit;
 using PetStoreApi.Data.Entity;
+using System.Net.Mail;
 
 namespace PetStoreApi.Domain
 {
     public class Message
     {
-        public List<MailboxAddress> To { get; set; }
+        public string To { get; set; }
         public string Subject { get; set; }
         public string Content { get; set; }
         public string? Token { get; set; }
         public AppUser AppUser { get; set; }
-        public Message(IEnumerable<string> to, string subject, string? content, string? token, AppUser user)
-        {
-            To = new List<MailboxAddress>();
-            To.AddRange(to.Select(x => new MailboxAddress(x, x)));
-            Subject = subject;
-            Content = content;
-            Token = token;
-            AppUser = user;
-        }
+
         public Message(string to, string subject, string? content, string? token, AppUser user)
         {
-            To = new List<MailboxAddress>();
-            To.Add(new MailboxAddress(to, to));
+            To = to;
             Subject = subject;
             Content = content;
             Token = token;
