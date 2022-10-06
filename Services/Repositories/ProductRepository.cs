@@ -256,7 +256,7 @@ namespace PetStoreApi.Services.Repositories
                     return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 101, "Not logged in!", null);
                 }
 
-                IEnumerable<ProductShortDto> wishList = _context.AppUserProducts.Where(i => i.UserId == appUser.Id).Include("Product.ProductImages").Include("Product.AppUserProducts").Select(i => ProductShortDto.CreateFromEntity(i.Product, appUser.Id));
+                IEnumerable<ProductShortDto> wishList = _context.AppUserProducts.Where(i => i.UserId == appUser.Id && i.Favourite == true).Include("Product.ProductImages").Include("Product.AppUserProducts").Select(i => ProductShortDto.CreateFromEntity(i.Product, appUser.Id));
                 PaginatedList<ProductShortDto> result = new PaginatedList<ProductShortDto>(wishList, pageParam.PageIndex, pageParam.PageSize);
 
                 return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", result);
