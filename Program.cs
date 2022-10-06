@@ -11,6 +11,7 @@ using PetStoreApi.Configuration;
 using PetStoreApi.Controllers;
 using PayPal.Api;
 using Microsoft.Extensions.Logging.AzureAppServices;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +95,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+app.UseCors("CorsPolicy");
 
 app.UseHttpsRedirection();
 

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using PayPal.Api;
 using sun.misc;
+using System.Collections.Generic;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -124,11 +125,14 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
+                var currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+                
+                var appUser = currentUsername != null ? _context.AppUsers.FirstOrDefault(u => u.Username.Equals(currentUsername.Value)) : null;
                 var product = _context.Products.Include("Breed").Include("Category").Include("ProductImages").Include("ProductOrigins").Include("ProductOrigins.Origin").OrderBy(product => product.Id).SingleOrDefault(product => product.Id.Equals(id));
 
-                IEnumerable<Product> suggestionList = _context.Products.Include("ProductImages").Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
+                IEnumerable<Product> suggestionList = _context.Products.Include("ProductImages").Include("AppUserProducts").Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
 
-                ProductDto result = ProductDto.CreateFromEntity(product, suggestionList.Select(p => ProductShortDto.CreateFromEntity(p)));
+                ProductDto result = ProductDto.CreateFromEntity(product, appUser == null ? suggestionList.Select(product => ProductShortDto.CreateFromEntity(product)) : suggestionList.Select(product => ProductShortDto.CreateFromEntity(product, appUser.Id)));
 
                 return new AppServiceResult<ProductDto>(true, 0, "Succeed!", result);
             }
@@ -144,26 +148,29 @@ namespace PetStoreApi.Services.Repositories
             try
             {
                 IEnumerable<Product> list;
+                var currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+
+                var appUser = currentUsername != null ? _context.AppUsers.FirstOrDefault(u => u.Username.Equals(currentUsername.Value)) : null;
                 switch (type)
                 {
                     case "all":
-                        list = await _context.Products.Include("ProductImages").ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Include("AppUserProducts").ToListAsync();
                         break;
                     case "dog":
-                        list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("chó")).ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Include("AppUserProducts").Where(product => product.Category.Name.Contains("chó")).ToListAsync();
                         break;
                     case "cat":
-                        list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Include("AppUserProducts").Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
                         break;
                     case "accessory":
-                        list = await _context.Products.Include("ProductImages").Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Include("AppUserProducts").Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
                         break;
                     default:
-                        list = await _context.Products.Include("ProductImages").ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Include("AppUserProducts").ToListAsync();
                         break;
                 }
 
-                IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+                IEnumerable<ProductShortDto> resultList = appUser == null ? list.Select(product => ProductShortDto.CreateFromEntity(product)) : list.Select(product => ProductShortDto.CreateFromEntity(product, appUser.Id));
 
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
 
@@ -181,22 +188,25 @@ namespace PetStoreApi.Services.Repositories
             try
             {
                 IEnumerable<Product> list;
+                var currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+
+                var appUser = currentUsername != null ? _context.AppUsers.FirstOrDefault(u => u.Username.Equals(currentUsername.Value)) : null;
                 if (filterParam.BreedId == 0)
                 {
                     if (filterParam.CategoryId == 0)
                     {
-                        list = await _context.Products.Include("ProductImages").ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Include("AppUserProducts").ToListAsync();
                     }
                     else
                     {
-                        list = await _context.Products.Include("ProductImages").Where(p => p.CategoryId == filterParam.CategoryId).ToListAsync();
+                        list = await _context.Products.Include("ProductImages").Include("AppUserProducts").Where(p => p.CategoryId == filterParam.CategoryId).ToListAsync();
                     }
                 }
                 else
                 {
-                    list = await _context.Products.Include("ProductImages").Where(p => p.BreedId == filterParam.BreedId).ToListAsync();
+                    list = await _context.Products.Include("ProductImages").Include("AppUserProducts").Where(p => p.BreedId == filterParam.BreedId).ToListAsync();
                 }
-                IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+                IEnumerable<ProductShortDto> resultList = appUser == null ? list.Select(product => ProductShortDto.CreateFromEntity(product)) : list.Select(product => ProductShortDto.CreateFromEntity(product, appUser.Id));
 
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
 
@@ -213,9 +223,12 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
-                IEnumerable<Product> list = await _context.Products.Include("ProductImages").Where(p => p.Name.Contains(keyword) || p.Breed.Name.Contains(keyword) || p.Category.Name.Contains(keyword)).ToListAsync();
+                var currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
 
-                IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
+                var appUser = currentUsername != null ? _context.AppUsers.FirstOrDefault(u => u.Username.Equals(currentUsername.Value)) : null;
+                IEnumerable<Product> list = await _context.Products.Include("ProductImages").Include("AppUserProducts").Where(p => p.Name.Contains(keyword) || p.Breed.Name.Contains(keyword) || p.Category.Name.Contains(keyword)).ToListAsync();
+
+                IEnumerable<ProductShortDto> resultList = appUser == null ? list.Select(product => ProductShortDto.CreateFromEntity(product)) : list.Select(product => ProductShortDto.CreateFromEntity(product, appUser.Id));
 
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
 
@@ -368,7 +381,7 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
-                IEnumerable<RemarkProductDto> remarks = _context.AppUserProducts.Where(r => r.ProductId.Equals(productId)).Include("Product").OrderByDescending(r => r.DateModified).Select(r => RemarkProductDto.CreateFromEntity(r));
+                IEnumerable<RemarkProductDto> remarks = _context.AppUserProducts.Where(r => r.ProductId.Equals(productId)).Include("Product").Include("AppUser").OrderByDescending(r => r.DateModified).Select(r => RemarkProductDto.CreateFromEntity(r));
 
                 PaginatedList<RemarkProductDto> dtoPage = new PaginatedList<RemarkProductDto>(remarks, pageParam.PageIndex, pageParam.PageSize);
 

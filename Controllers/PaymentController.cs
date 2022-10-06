@@ -77,11 +77,11 @@ namespace PetStoreApi.Controllers
         }
 
         [HttpGet("success")]
-        public IActionResult SuccessPay(Guid orderTrackingNumber, string? paymentId = "", string? token = "", string? PayerID = "")
+        public async Task<IActionResult> SuccessPay(Guid orderTrackingNumber, string? paymentId = "", string? token = "", string? PayerID = "")
         {
             Payment payment = _paypalRepository.ExecutePayment(paymentId, PayerID);
 
-            _orderRepository.UpdateOrderStatus(orderTrackingNumber, 2);
+            await _orderRepository.UpdateOrderStatus(orderTrackingNumber, 2);
 
             string tempateFilePath = _hostingEnvironment.ContentRootPath + "/Templates/success.html";
 

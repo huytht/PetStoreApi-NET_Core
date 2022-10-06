@@ -133,7 +133,7 @@ namespace PetStoreApi.Services.Repositories
                     return AppBaseResult.GenarateIsFailed(101, "Order status id is not exist!");
                 }
 
-                order.OrderStatus = orderStatus;
+                order.OrderStatusId = orderStatusId;
 
                 await _context.SaveChangesAsync();
 

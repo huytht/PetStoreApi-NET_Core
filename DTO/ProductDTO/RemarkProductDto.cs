@@ -10,6 +10,7 @@ namespace PetStoreApi.DTO.ProductDTO
 
         public bool? Favourite { get; set; }
         public DateTime? Date { get; set; }
+        public string Username { get; set; }
         public static RemarkProductDto CreateFromEntity(AppUserProduct src)
         {
             RemarkProductDto dto = new RemarkProductDto();
@@ -18,6 +19,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.Remark = src.Remark;
             dto.Favourite = src.Favourite;
             dto.Date = src.DateModified;
+            dto.Username = src.AppUser.Username;
 
             return dto;
         }

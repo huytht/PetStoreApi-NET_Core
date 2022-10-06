@@ -20,7 +20,7 @@ namespace PetStoreApi.Controllers
             _productRepository = productRepository;
         }
         [HttpGet("{productType?}/list")]
-        public async Task<IActionResult> GetProductList(string productType = "all", int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
+        public async Task<IActionResult> GetProductListAuth(string productType = "all", int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
         {
             PageParam pageParam = new PageParam(pageNumber, pageSize);
 
@@ -28,6 +28,7 @@ namespace PetStoreApi.Controllers
 
             return result.success ? Ok(result) : BadRequest(result);
         }
+       
         [HttpGet("{id}")]
         public IActionResult GetProductDetail(Guid id)
         {
