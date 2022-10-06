@@ -62,5 +62,41 @@ namespace PetStoreApi.Controllers
             AppServiceResult<Product> result = _productRepository.AddProduct(product);
             return result.success ? StatusCode(StatusCodes.Status201Created, result) : BadRequest();
         }
+        [HttpGet("remark")]
+        [Authorize]
+        public IActionResult GetRemarkList(Guid productId, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
+        {
+            PageParam pageParam = new PageParam(pageNumber, pageSize);
+
+            AppServiceResult<PaginatedList<RemarkProductDto>> result = _productRepository.GetRemarkListByProduct(productId, pageParam);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
+        [HttpPost("remark")]
+        [Authorize]
+        public async Task<IActionResult> SaveRemark(RemarkProductDto dto)
+        {
+            AppBaseResult result = await _productRepository.SaveRemark(dto);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
+        [HttpGet("wish-list")]
+        [Authorize]
+        public async Task<IActionResult> GetWishList(int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
+        {
+            PageParam pageParam = new PageParam(pageNumber, pageSize);
+
+            AppServiceResult<PaginatedList<ProductShortDto>> result = await _productRepository.GetWishList(pageParam);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
+        [HttpPut("wish-list")]
+        [Authorize]
+        public async Task<IActionResult> UpdateWishList(Guid productId)
+        {
+            AppBaseResult result = await _productRepository.UpdateWishList(productId);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
     }
 }

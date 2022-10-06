@@ -41,7 +41,8 @@ namespace PetStoreApi.Services.Repositories
                     if (breed != null)
                     {
                         newProduct.BreedId = breed.Id;
-                    } else
+                    }
+                    else
                     {
                         _logger.LogWarning("Breed Id: " + product.BreedId + " is not exist!");
                         return null;
@@ -61,7 +62,7 @@ namespace PetStoreApi.Services.Repositories
                         return null;
                     }
                 }
-                
+
                 if (product.OriginIds != null)
                 {
                     foreach (var originId in product.OriginIds)
@@ -96,7 +97,7 @@ namespace PetStoreApi.Services.Repositories
                 newProduct.Status = product.Status;
                 if (product.ImageFiles != null)
                 {
-                    foreach(IFormFile file in product.ImageFiles) 
+                    foreach (IFormFile file in product.ImageFiles)
                     {
                         string imagePath = _fileRepository.Upload(newProduct.Name, file);
                         ProductImage productImage = new ProductImage();
@@ -126,7 +127,7 @@ namespace PetStoreApi.Services.Repositories
                 var product = _context.Products.Include("Breed").Include("Category").Include("ProductImages").Include("ProductOrigins").Include("ProductOrigins.Origin").OrderBy(product => product.Id).SingleOrDefault(product => product.Id.Equals(id));
 
                 IEnumerable<Product> suggestionList = _context.Products.Include("ProductImages").Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
-                
+
                 ProductDto result = ProductDto.CreateFromEntity(product, suggestionList.Select(p => ProductShortDto.CreateFromEntity(p)));
 
                 return new AppServiceResult<ProductDto>(true, 0, "Succeed!", result);
@@ -145,18 +146,23 @@ namespace PetStoreApi.Services.Repositories
                 IEnumerable<Product> list;
                 switch (type)
                 {
-                    case "all": list = await _context.Products.Include("ProductImages").ToListAsync();
+                    case "all":
+                        list = await _context.Products.Include("ProductImages").ToListAsync();
                         break;
-                    case "dog": list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("chó")).ToListAsync();
+                    case "dog":
+                        list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("chó")).ToListAsync();
                         break;
-                    case "cat": list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
-                                break;
-                    case "accessory": list = await _context.Products.Include("ProductImages").Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
-                                break;
-                    default: list = await _context.Products.Include("ProductImages").ToListAsync();
-                             break;
+                    case "cat":
+                        list = await _context.Products.Include("ProductImages").Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
+                        break;
+                    case "accessory":
+                        list = await _context.Products.Include("ProductImages").Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
+                        break;
+                    default:
+                        list = await _context.Products.Include("ProductImages").ToListAsync();
+                        break;
                 }
-                
+
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
 
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
@@ -180,11 +186,13 @@ namespace PetStoreApi.Services.Repositories
                     if (filterParam.CategoryId == 0)
                     {
                         list = await _context.Products.Include("ProductImages").ToListAsync();
-                    } else
+                    }
+                    else
                     {
                         list = await _context.Products.Include("ProductImages").Where(p => p.CategoryId == filterParam.CategoryId).ToListAsync();
                     }
-                } else
+                }
+                else
                 {
                     list = await _context.Products.Include("ProductImages").Where(p => p.BreedId == filterParam.BreedId).ToListAsync();
                 }
@@ -208,7 +216,7 @@ namespace PetStoreApi.Services.Repositories
                 IEnumerable<Product> list = await _context.Products.Include("ProductImages").Where(p => p.Name.Contains(keyword) || p.Breed.Name.Contains(keyword) || p.Category.Name.Contains(keyword)).ToListAsync();
 
                 IEnumerable<ProductShortDto> resultList = list.Select(product => ProductShortDto.CreateFromEntity(product));
-                
+
                 PaginatedList<ProductShortDto> resultPage = new PaginatedList<ProductShortDto>(resultList, pageParam.PageIndex, pageParam.PageSize);
 
                 return new AppServiceResult<PaginatedList<ProductShortDto>>(true, 0, "Succeed!", resultPage);
@@ -224,7 +232,7 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
-                string currentUsername =  _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+                string currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
 
                 var appUser = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
 
@@ -272,7 +280,7 @@ namespace PetStoreApi.Services.Repositories
                 }
 
                 var existWishList = await _context.AppUserProducts.FirstOrDefaultAsync(e => e.UserId.Equals(appUser.Id) && e.ProductId.Equals(productId));
-                
+
                 AppUserProduct newWL = new AppUserProduct();
                 newWL.ProductId = productId;
                 newWL.UserId = appUser.Id;
@@ -286,9 +294,9 @@ namespace PetStoreApi.Services.Repositories
                     newWL.AppUser = appUser;
                     newWL.Product = product;
                     newWL.Favourite = true;
+                    await _context.AppUserProducts.AddAsync(newWL);
                 }
 
-                await _context.AppUserProducts.AddAsync(newWL);
                 await _context.SaveChangesAsync();
 
                 return AppBaseResult.GenarateIsSucceed();
@@ -297,6 +305,80 @@ namespace PetStoreApi.Services.Repositories
             {
                 _logger.LogError(e.Message);
                 return AppBaseResult.GenarateIsFailed(99, "Unknown");
+            }
+        }
+
+        public async Task<AppBaseResult> SaveRemark(RemarkProductDto remarkProduct)
+        {
+            try
+            {
+                string currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                var appUser = await _context.AppUsers.FirstOrDefaultAsync(u => u.Username.Equals(currentUsername));
+
+                if (appUser == null)
+                {
+                    _logger.LogWarning("Not logged in!");
+
+                    return new AppServiceResult<PaginatedList<ProductShortDto>>(false, 101, "Not logged in!", null);
+                }
+
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == remarkProduct.ProductId);
+
+                if (product == null)
+                {
+                    _logger.LogWarning("Product Id is not exist: " + remarkProduct.ProductId + ", Cannot further process!");
+
+                    return AppBaseResult.GenarateIsFailed(101, "Product Id is not exist: " + remarkProduct.ProductId);
+                }
+
+                var existRemark = await _context.AppUserProducts.FirstOrDefaultAsync(e => e.UserId.Equals(appUser.Id) && e.ProductId.Equals(remarkProduct.ProductId));
+
+                AppUserProduct newRemark = new AppUserProduct();
+                newRemark.ProductId = remarkProduct.ProductId;
+                newRemark.UserId = appUser.Id;
+                if (existRemark != null)
+                {
+                    newRemark = existRemark;
+                    newRemark.Rate = remarkProduct.Rate;
+                    newRemark.Remark = remarkProduct.Remark;
+                }
+                else
+                {
+                    newRemark.AppUser = appUser;
+                    newRemark.Product = product;
+                    newRemark.Rate = remarkProduct.Rate;
+                    newRemark.Remark = remarkProduct.Remark;
+                    await _context.AppUserProducts.AddAsync(newRemark);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return AppBaseResult.GenarateIsSucceed();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
+            }
+        }
+
+        public AppServiceResult<PaginatedList<RemarkProductDto>> GetRemarkListByProduct(Guid productId, PageParam pageParam)
+        {
+            try
+            {
+                IEnumerable<RemarkProductDto> remarks = _context.AppUserProducts.Where(r => r.ProductId.Equals(productId)).Include("Product").OrderByDescending(r => r.DateModified).Select(r => RemarkProductDto.CreateFromEntity(r));
+
+                PaginatedList<RemarkProductDto> dtoPage = new PaginatedList<RemarkProductDto>(remarks, pageParam.PageIndex, pageParam.PageSize);
+
+                return new AppServiceResult<PaginatedList<RemarkProductDto>>(true, 0, "Succeed!", dtoPage);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+
+                return new AppServiceResult<PaginatedList<RemarkProductDto>>(false, 99, "Unknown", null);
             }
         }
     }

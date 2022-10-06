@@ -9,5 +9,6 @@
         public int? Rate { get; set; }
         public string? Remark { get; set; }
         public bool? Favourite { get; set; }
+        public DateTime DateModified { get; private set; }
     }
 }

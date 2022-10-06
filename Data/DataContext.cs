@@ -7,7 +7,7 @@ namespace PetStoreApi.Helpers
 {
     public class DataContext : DbContext
     {
-        
+
         public DataContext()
         {
         }
@@ -73,7 +73,7 @@ namespace PetStoreApi.Helpers
             {
                 entity.ToTable("Order");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.OrderDate).HasDefaultValueSql("getutcdate()");
+                entity.Property(e => e.OrderDate).HasDefaultValueSql("dateadd(hour, 7, getutcdate())");
                 entity.Property(e => e.Reciever).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Address).IsRequired();
 
@@ -206,6 +206,9 @@ namespace PetStoreApi.Helpers
             {
                 entity.ToTable("AppUserProduct");
                 entity.HasKey(e => new { e.ProductId, e.UserId });
+                entity.Property(p => p.DateModified)
+                    .HasComputedColumnSql("dateadd(hour, 7, getutcdate())")
+                    .ValueGeneratedOnAddOrUpdate();
 
                 entity.HasOne(e => e.Product)
                     .WithMany(e => e.AppUserProducts)

@@ -14,5 +14,7 @@ namespace PetStoreApi.Services
         AppServiceResult<Product> AddProduct(ProductCreateDto product);
         Task<AppServiceResult<PaginatedList<ProductShortDto>>> GetWishList(PageParam pageParam);
         Task<AppBaseResult> UpdateWishList(Guid productId);
+        Task<AppBaseResult> SaveRemark(RemarkProductDto remarkProduct);
+        AppServiceResult<PaginatedList<RemarkProductDto>> GetRemarkListByProduct(Guid productId, PageParam pageParam);
     }
 }
