@@ -12,6 +12,7 @@ using PetStoreApi.Controllers;
 using PayPal.Api;
 using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using SendGrid.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddDbContext<DataContext>(option => {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+builder.Services.AddSendGrid(option =>
+{
+    option.ApiKey = builder.Configuration.GetSection("EmailConfiguration")
+    .GetValue<string>("APIKey");
 });
 builder.Services.AddCors(options =>
 {

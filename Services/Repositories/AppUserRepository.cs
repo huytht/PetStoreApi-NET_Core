@@ -212,17 +212,17 @@ namespace PetStoreApi.Services.Repositories
 
                 user.UserInfo.AvatarImg = FileConstant.TEMP_PROFILE_IMAGE_BASE_URL + userRegister.Username;
 
-                user.Enabled = false;
+                user.Enabled = true;
                 user.AccountNonLocked = true;
 
                 user.Password = BC.HashPassword(userRegister.Password);
 
                 await _context.AppUsers.AddAsync(user);
-                //await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-                Message message = new Message(user.Email, "Send Email Verify", null, null, user);
+                //Message message = new Message(user.Email, "Send Email Verify", null, null, user);
 
-                await _emailSender.SendEmailAsync(message);
+                //_emailSender.SendEmailAsync(message);
 
                 return AppBaseResult.GenarateIsSucceed();
             }

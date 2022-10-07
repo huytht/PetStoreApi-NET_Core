@@ -18,13 +18,16 @@ namespace PetStoreApi.Services.Repositories
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly ILogger<EmailSender> _logger;
         private readonly DataContext _dataContext;
+        private readonly ISendGridClient _sendGridClient;
+        private bool _isSuccess;
 
-        public EmailSender(EmailConfiguration emailConfig, IWebHostEnvironment hostingEnvironment, ILogger<EmailSender> logger, DataContext dataContext)
+        public EmailSender(EmailConfiguration emailConfig, IWebHostEnvironment hostingEnvironment, ILogger<EmailSender> logger, DataContext dataContext, ISendGridClient sendGridClient)
         {
             _emailConfig = emailConfig;
             _hostingEnvironment = hostingEnvironment;
             _logger = logger;
             _dataContext = dataContext;
+            _sendGridClient = sendGridClient;
         }
 
         public async Task SendEmailAsync(Message message)
@@ -36,23 +39,32 @@ namespace PetStoreApi.Services.Repositories
             vToken.AppUser = message.AppUser;
             vToken.IsVerify = false;
 
-            var mailMessage = CreateEmailMessage(message);
+            //var mailMessage = CreateEmailMessage(message);
 
-            bool isSuccess = await SendAsync(mailMessage);
+            //await SendAsync(mailMessage);
 
-            vToken.IsSend = isSuccess;
+            vToken.IsSend = _isSuccess;
 
             await _dataContext.VerificationTokens.AddAsync(vToken);
             await _dataContext.SaveChangesAsync();
 
         }
-        public async Task<bool> SendAsync(SendGridMessage mailMessage)
+        public async Task SendAsync(SendGridMessage mailMessage)
         {
-            var apiKey = _emailConfig.APIKey;
-            var client = new SendGridClient(apiKey);
-            var response = await client.SendEmailAsync(mailMessage);
+            try
+            {
+                //var apiKey = _emailConfig.APIKey;
+                //var client = new SendGridClient(apiKey);
+                await _sendGridClient.SendEmailAsync(mailMessage);
 
-            return response.IsSuccessStatusCode ? true : false;
+                _isSuccess = true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.InnerException.Message);
+                _isSuccess = false;
+            }
+           
 
         }
         private SendGridMessage CreateEmailMessage(Message message)
@@ -68,13 +80,13 @@ namespace PetStoreApi.Services.Repositories
 
             var emailMessage = new SendGridMessage()
             {
-                From = new EmailAddress(_emailConfig.From, _emailConfig.From),
+                From = new EmailAddress(_emailConfig.From, _emailConfig.FromName),
                 Subject = message.Subject,
                 HtmlContent = bodyBuilder.HtmlBody
             };
-            emailMessage.AddTo(new EmailAddress(message.To, message.To));
+            emailMessage.AddTo(message.To);
 
-            return emailMessage;
+            return emailMessage; 
         }
 
     }
