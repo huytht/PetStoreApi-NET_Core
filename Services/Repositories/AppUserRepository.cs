@@ -222,7 +222,7 @@ namespace PetStoreApi.Services.Repositories
 
                 Message message = new Message(user.Email, "Send Email Verify", null, null, user);
 
-                _emailSender.SendEmail(message);
+                await _emailSender.SendEmailAsync(message);
 
                 return AppBaseResult.GenarateIsSucceed();
             }

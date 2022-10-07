@@ -1,12 +1,13 @@
 ﻿using MimeKit;
 using PetStoreApi.Domain;
+using SendGrid.Helpers.Mail;
 using System.Net.Mail;
 
 namespace PetStoreApi.Services
 {
     public interface IEmailSender
     {
-        void SendEmail(Message message);
-        bool Send(MailMessage mailMessage);
+        Task SendEmailAsync(Message message);
+        Task<bool> SendAsync(SendGridMessage mailMessage);
     }
 }

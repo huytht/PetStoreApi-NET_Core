@@ -5,6 +5,8 @@ using PetStoreApi.Configuration;
 using PetStoreApi.Data.Entity;
 using PetStoreApi.Domain;
 using PetStoreApi.Helpers;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 using System.Net;
 using System.Net.Mail;
 
@@ -25,7 +27,7 @@ namespace PetStoreApi.Services.Repositories
             _dataContext = dataContext;
         }
 
-        public void SendEmail(Message message)
+        public async Task SendEmailAsync(Message message)
         {
             VerificationToken vToken = new VerificationToken();
             Guid newToken = Guid.NewGuid();
@@ -36,47 +38,42 @@ namespace PetStoreApi.Services.Repositories
 
             var mailMessage = CreateEmailMessage(message);
 
-            bool isSuccess = Send(mailMessage);
+            bool isSuccess = await SendAsync(mailMessage);
 
             vToken.IsSend = isSuccess;
 
-            _dataContext.VerificationTokens.Add(vToken);
-            _dataContext.SaveChanges();
+            await _dataContext.VerificationTokens.AddAsync(vToken);
+            await _dataContext.SaveChangesAsync();
 
         }
-        public bool Send(MailMessage mailMessage)
+        public async Task<bool> SendAsync(SendGridMessage mailMessage)
         {
-            try
-            {
-                SmtpClient smtp = new SmtpClient(_emailConfig.SmtpServer, _emailConfig.Port);
-                smtp.EnableSsl = true;
-                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                smtp.UseDefaultCredentials = false;
-                smtp.Credentials = new NetworkCredential(_emailConfig.UserName, _emailConfig.Password);
-                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Ssl3 | System.Net.SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                smtp.Send(mailMessage);
+            var apiKey = _emailConfig.APIKey;
+            var client = new SendGridClient(apiKey);
+            var response = await client.SendEmailAsync(mailMessage);
 
-                return true;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.InnerException.Message);
-                return false;
-            }
+            return response.IsSuccessStatusCode ? true : false;
 
         }
-        private MailMessage CreateEmailMessage(Message message)
+        private SendGridMessage CreateEmailMessage(Message message)
         {
-            var emailMessage = new MailMessage();
-            emailMessage.From = new MailAddress(_emailConfig.From);
-            emailMessage.To.Add(new MailAddress(message.To));
-            emailMessage.Subject = message.Subject;
-            emailMessage.IsBodyHtml = true;
+            //var emailMessage = new MailMessage();
+            //emailMessage.From = new MailAddress(_emailConfig.From);
+            //emailMessage.To.Add(new MailAddress(message.To));
+            //emailMessage.Subject = message.Subject;
+            //emailMessage.IsBodyHtml = true;
 
             string tempateFilePath = _hostingEnvironment.ContentRootPath + "/Templates/VerifyEmail.html";
             var bodyBuilder = new BodyBuilder { HtmlBody = File.ReadAllText(tempateFilePath).Replace("VERIFICATION_URL", string.Format("https://localhost:7277/api/user/verify/{0}", message.Token)) };
 
-            emailMessage.Body = bodyBuilder.HtmlBody;
+            var emailMessage = new SendGridMessage()
+            {
+                From = new EmailAddress(_emailConfig.From, _emailConfig.From),
+                Subject = message.Subject,
+                HtmlContent = bodyBuilder.HtmlBody
+            };
+            emailMessage.AddTo(new EmailAddress(message.To, message.To));
+
             return emailMessage;
         }
 
