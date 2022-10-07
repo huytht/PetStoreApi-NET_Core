@@ -99,5 +99,37 @@ namespace PetStoreApi.Controllers
 
             return result.success ? Ok(result) : BadRequest(result);
         }
+        [HttpGet("list/{productType}")]
+        [Authorize]
+        public async Task<IActionResult> GetProductListByType(string productType)
+        {
+            var result = await _productRepository.GetProductListByType(productType);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
+        [HttpPut("amount")]
+        [Authorize]
+        public async Task<IActionResult> UpdateAmount(Guid productId, int amount)
+        {
+            var result = await _productRepository.UpdateAmountInInventory(productId, amount);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> UpdateProduct(Guid productId, [FromForm] ProductUpdateDto productUpdate)
+        {
+            var result = await _productRepository.UpdateProduct(productId, productUpdate);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> DeleteProduct(Guid productId)
+        {
+            var result = await _productRepository.DeleteProduct(productId);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
     }
 }

@@ -127,18 +127,18 @@ namespace PetStoreApi.Services.Repositories
             }
         }
 
-        public async Task<AppServiceResult<List<AppUser>>> GetUserList()
+        public async Task<AppServiceResult<List<AppUserForAdminDto>>> GetUserList()
         {
             try
             {
-                var users = _context.AppUsers.Select(u => u);
+                var users = await _context.AppUsers.Include("UserInfo").Include("AppUserRoles").Include("AppUserRoles.AppRole").Select(u => AppUserForAdminDto.CreateFromEntity(u)).ToListAsync();
 
-                return new AppServiceResult<List<AppUser>>(true, 0, "Succeed!", users.ToList());
+                return new AppServiceResult<List<AppUserForAdminDto>>(true, 0, "Succeed!", users);
             }
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                return new AppServiceResult<List<AppUser>>(false, 99, "Unknown", null);
+                return new AppServiceResult<List<AppUserForAdminDto>>(false, 99, "Unknown", null);
             }
         }
 
@@ -362,6 +362,31 @@ namespace PetStoreApi.Services.Repositories
                 return AppBaseResult.GenarateIsFailed(99, "Unknown");
             }
             return AppBaseResult.GenarateIsFailed(99, "Unknown");
+        }
+
+        public async Task<AppBaseResult> UpdateActive(UserStatusDto userStatus)
+        {
+            try
+            {
+                var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Id.Equals(userStatus.UserId));
+                if (user == null)
+                {
+                    _logger.LogWarning("UserId is not exist: " + userStatus.UserId + ", Cannot further process!");
+
+                    return AppBaseResult.GenarateIsFailed(101, "UserId is not exist: " + userStatus.UserId);
+                }
+
+                user.Enabled = userStatus.IsActive;
+
+                await _context.SaveChangesAsync();
+                return AppBaseResult.GenarateIsSucceed();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
+            }
         }
 
         public async Task<AppServiceResult<string>> UploadImage(IFormFile file)

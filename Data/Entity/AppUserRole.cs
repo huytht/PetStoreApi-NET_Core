@@ -7,6 +7,9 @@
         public AppUser AppUser { get; set; }
         public AppRole AppRole { get; set; }
 
+        public AppUserRole()
+        {
+        }
         public AppUserRole(Guid userId, int roleId)
         {
             UserId = userId;

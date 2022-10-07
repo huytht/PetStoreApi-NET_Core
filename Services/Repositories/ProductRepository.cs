@@ -7,6 +7,7 @@ using System.Security.Claims;
 using PayPal.Api;
 using sun.misc;
 using System.Collections.Generic;
+using PayPal;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -392,6 +393,187 @@ namespace PetStoreApi.Services.Repositories
                 _logger.LogError(e.Message);
 
                 return new AppServiceResult<PaginatedList<RemarkProductDto>>(false, 99, "Unknown", null);
+            }
+        }
+
+        public async Task<AppServiceResult<List<ProductDto>>> GetProductListByType(string type = "")
+        {
+            try
+            {
+                IEnumerable<Product> list;
+               
+                switch (type)
+                {
+                    case "dog":
+                        list = await _context.Products.Include("ProductImages").Include("ProductOrigins").Include("ProductOrigins.Origin").Include("Category").Include("Breed").Where(product => product.Category.Name.Contains("chó")).ToListAsync();
+                        break;
+                    case "cat":
+                        list = await _context.Products.Include("ProductImages").Include("ProductOrigins").Include("ProductOrigins.Origin").Include("Category").Include("Breed").Where(product => product.Category.Name.Contains("mèo")).ToListAsync();
+                        break;
+                    case "accessory":
+                        list = await _context.Products.Include("ProductImages").Include("ProductOrigins").Include("Category").Include("Breed").Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
+                        break;
+                    default:
+                        list = await _context.Products.Include("ProductImages").Include("ProductOrigins").Include("Category").Include("Breed").Where(product => !product.Category.Name.Contains("mèo") && !product.Category.Name.Contains("chó")).ToListAsync();
+                        break;
+                }
+
+                List<ProductDto> resultList = list.Select(product => ProductDto.CreateFromEntity(product)).ToList();
+
+                return new AppServiceResult<List<ProductDto>>(true, 0, "Succeed!", resultList);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new AppServiceResult<List<ProductDto>>(false, 99, "Unknown error", null);
+            }
+        }
+
+        public async Task<AppBaseResult> UpdateAmountInInventory(Guid productId, int amount)
+        {
+            try
+            {
+                Product product = await _context.Products.FirstOrDefaultAsync(p => p.Id.Equals(productId));
+
+                if (product != null)
+                {
+                    product.AmountInStock = product.AmountInStock != null ? product.AmountInStock + amount : amount;
+                    await _context.SaveChangesAsync();
+                    return AppBaseResult.GenarateIsSucceed();
+                }
+                else
+                {
+                    _logger.LogWarning("Product is not exist: " + productId + ", Cannot further process!");
+                    return AppBaseResult.GenarateIsFailed(101, "Product is not exist: " + productId);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
+            }
+        }
+
+        public async Task<AppBaseResult> UpdateProduct(Guid productId, ProductUpdateDto product)
+        {
+            try
+            {
+                var productExist = await _context.Products.Include("ProductImages").Include("ProductOrigins").FirstOrDefaultAsync(p => p.Id.Equals(productId));
+                if (productExist != null)
+                {
+                    if (product.BreedId != null)
+                    {
+                        var breed = await _context.Breeds.FirstOrDefaultAsync(b => b.Id == product.BreedId);
+
+                        if (breed == null)
+                        {
+                            _logger.LogWarning("Breed Id: " + product.BreedId + " is not exist!");
+
+                            return AppBaseResult.GenarateIsFailed(101, "Breed is not exist: " + product.BreedId);
+                        }
+                        else
+                        {
+                            productExist.BreedId = product.BreedId;
+                        }
+                    }
+
+                    if (product.CategoryId != null)
+                    {
+                        var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == product.CategoryId);
+
+                        if (category == null)
+                        {
+                            _logger.LogWarning("Category Id: " + product.CategoryId + " is not exist!");
+
+                            return AppBaseResult.GenarateIsFailed(101, "Category is not exist: " + product.CategoryId);
+                        }
+                        else
+                        {
+                            productExist.CategoryId = product.CategoryId;
+                        }
+                    }
+                    productExist.Name = product.Name;
+                    productExist.Price = product.Price;
+                    productExist.Description = product.Description;
+                    if (product.Gender != null)
+                        productExist.Gender = product.Gender;
+
+                    if (product.Age != null)
+                        productExist.Age = product.Age;
+
+                    if (product.ImageFiles != null && product.ImageFiles.Count() > 0)
+                    {
+                        foreach (IFormFile file in product.ImageFiles)
+                        {
+                            string imagePath = _fileRepository.Upload(productExist.Name, file);
+                            ProductImage productImage = new ProductImage();
+                            productImage.ImagePath = imagePath;
+                            productImage.Product = productExist;
+                            productExist.ProductImages.Add(productImage);
+                        }
+                    }
+                    if (product.OriginIds != null && product.OriginIds.Count() > 0)
+                    {
+                        _context.ProductOrigins.RemoveRange(productExist.ProductOrigins);
+                        foreach (var originId in product.OriginIds)
+                        {
+                            var origin = await _context.Origins.FirstOrDefaultAsync(o => o.Id == originId);
+
+                            if (origin != null)
+                            {
+                                ProductOrigin productOrigin = new ProductOrigin();
+                                productOrigin.ProductId = productExist.Id;
+                                productOrigin.OriginId = origin.Id;
+                                productExist.ProductOrigins.Add(productOrigin);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Origin Id: " + originId + " is not exist!");
+                                return null;
+                            }
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    return AppBaseResult.GenarateIsSucceed();
+                }
+                else
+                {
+                    _logger.LogWarning("Product is not exist: " + productId + ", Cannot further process!");
+                    return AppBaseResult.GenarateIsFailed(101, "Product is not exist: " + productId);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
+            }
+        }
+
+        public async Task<AppBaseResult> DeleteProduct(Guid productId)
+        {
+            try
+            {
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+                if (product != null)
+                {
+                    _context.Products.Remove(product);
+                    await _context.SaveChangesAsync();
+                    return AppBaseResult.GenarateIsSucceed();
+                }
+                else
+                {
+                    _logger.LogWarning("Product is not exist: " + productId + ", Cannot further process!");
+                    return AppBaseResult.GenarateIsFailed(101, "Product is not exist: " + productId);
+                }
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+
+                return AppBaseResult.GenarateIsFailed(99, "Unknown");
             }
         }
     }

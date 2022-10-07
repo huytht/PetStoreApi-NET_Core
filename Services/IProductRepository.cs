@@ -1,7 +1,6 @@
 ﻿using PetStoreApi.Data.Entity;
 using PetStoreApi.DTO.ProductDTO;
 using PetStoreApi.Domain;
-using java.lang;
 
 namespace PetStoreApi.Services
 {
@@ -16,5 +15,9 @@ namespace PetStoreApi.Services
         Task<AppBaseResult> UpdateWishList(Guid productId);
         Task<AppBaseResult> SaveRemark(RemarkProductDto remarkProduct);
         AppServiceResult<PaginatedList<RemarkProductDto>> GetRemarkListByProduct(Guid productId, PageParam pageParam);
+        Task<AppServiceResult<List<ProductDto>>> GetProductListByType(string type = "");
+        Task<AppBaseResult> UpdateAmountInInventory(Guid productId, int amount);
+        Task<AppBaseResult> UpdateProduct(Guid productId, ProductUpdateDto product);
+        Task<AppBaseResult> DeleteProduct(Guid productId);
     }
 }

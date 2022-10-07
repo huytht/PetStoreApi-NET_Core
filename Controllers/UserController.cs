@@ -92,5 +92,21 @@ namespace PetStoreApi.Controllers
 
             return result.success ? Ok(result) : BadRequest(result);
         }
+        [HttpPost("update-status")]
+        [Authorize]
+        public async Task<IActionResult> UpdateStatus(UserStatusDto userStatus)
+        {
+            var result = await _appUserRepository.UpdateActive(userStatus);
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
+        [HttpGet("list")]
+        [Authorize]
+        public async Task<IActionResult> GetUsers()
+        {
+            var result = await _appUserRepository.GetUserList();
+
+            return result.success ? Ok(result) : BadRequest(result);
+        }
     }
 }
