@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using PetStoreApi.Domain;
 using PetStoreApi.DTO.OrderDTO;
+using PetStoreApi.DTO.PurchaseDTO;
+using PetStoreApi.DTO.ResponseDTO;
 using PetStoreApi.Services;
 using System.Xml.Linq;
 
@@ -18,34 +20,33 @@ namespace PetStoreApi.Controllers
             _orderRepository = orderRepository;
         }
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "ROLE_ADMIN")]
         public async Task<IActionResult> GetOrderList(int orderStatus = 0) {
-
 
             AppServiceResult<List<OrderDto>> result = await _orderRepository.GetListAllOrder(orderStatus);
 
-            return result.success ? Ok(result) : BadRequest(result);
-	    }
+            return result.success ? Ok(new HttpResponseSuccess<List<OrderDto>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
+        }
         [HttpPut("confirm")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_ADMIN")]
         public async Task<IActionResult> ConfirmOrder(Guid orderTrackingNumber) {
 		    AppBaseResult result = await _orderRepository.UpdateOrderStatus(orderTrackingNumber, 3);
 
-            return result.success ? Ok(result) : BadRequest(result);
-	    }
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
+        }
         [HttpPut("cancel")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_MEMBER, ROLE_ADMIN")]
         public async Task<IActionResult> CancelOrder(Guid orderTrackingNumber) {
             AppBaseResult result = await _orderRepository.UpdateOrderStatus(orderTrackingNumber, 5);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpDelete]
-        [Authorize]
+        [Authorize(Roles = "ROLE_ADMIN")]
         public IActionResult DeleteOrder(Guid orderId) {
             AppBaseResult result = _orderRepository.DeleteOrder(orderId);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
         }
     }
 }

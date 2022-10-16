@@ -6,6 +6,7 @@ using PetStoreApi.DTO.BreedDTO;
 using PetStoreApi.DTO.CategoryDTO;
 using PetStoreApi.DTO.OrderStatusDTO;
 using PetStoreApi.DTO.OriginDTO;
+using PetStoreApi.DTO.ResponseDTO;
 using PetStoreApi.Services;
 using System.IO;
 
@@ -26,7 +27,7 @@ namespace PetStoreApi.Controllers
         {
             AppServiceResult<List<Breed?>> result = await _commonRepository.GetAllBreedByCategory(categoryId);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<List<Breed?>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
 
         [HttpGet("list/all/breed")]
@@ -34,7 +35,7 @@ namespace PetStoreApi.Controllers
         {
             AppServiceResult<List<BreedDto>> result = await _commonRepository.GetBreedList();
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<List<BreedDto>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
 
         [HttpGet("list/origin")]
@@ -42,7 +43,7 @@ namespace PetStoreApi.Controllers
         {
             AppServiceResult<List<OriginDto>> result = await _commonRepository.GetOriginList();
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<List<OriginDto>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
 
         [HttpGet("list/category")]
@@ -50,7 +51,7 @@ namespace PetStoreApi.Controllers
         {
             AppServiceResult<List<CategoryDto>> result = await _commonRepository.GetCategoryList();
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<List<CategoryDto>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
 
         }
 
@@ -59,8 +60,7 @@ namespace PetStoreApi.Controllers
         {
             AppServiceResult<List<OrderStatusDto>> result = await _commonRepository.GetOrderStatusList();
 
-            return result.success ? Ok(result) : BadRequest(result);
-
+            return result.success ? Ok(new HttpResponseSuccess<List<OrderStatusDto>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
     }
 }

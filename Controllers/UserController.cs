@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PetStoreApi.Constants;
 using PetStoreApi.Domain;
 using PetStoreApi.DTO.OrderDTO;
+using PetStoreApi.DTO.ResponseDTO;
 using PetStoreApi.DTO.UserDTO;
 using PetStoreApi.DTO.UserInfoDTO;
 using PetStoreApi.Services;
@@ -27,86 +28,86 @@ namespace PetStoreApi.Controllers
         {
             AppBaseResult result = await _appUserRepository.VerifyEmail(token);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]UserLoginDto userLogin)
         {
             AppServiceResult<UserLoginResponseDto> result = await _appUserRepository.Login(userLogin);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<UserLoginResponseDto>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegister)
         {
             AppBaseResult result = await _appUserRepository.Register(userRegister);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(TokenModel model)
         {
             AppServiceResult<TokenModel> result = await _appUserRepository.RenewToken(model);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<TokenModel>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpGet("order")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_MEMBER, ROLE_ADMIN")]
         public async Task<IActionResult> GetOrderlist(int orderStatus, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
         {
             PageParam pageParam = new PageParam(pageNumber, pageSize);
 
             AppServiceResult<PaginatedList<OrderDto>> result = await _orderRepository.GetListOrder(orderStatus, pageParam);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<PaginatedList<OrderDto>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpGet("profiles")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_MEMBER, ROLE_ADMIN")]
         public async Task<IActionResult> GetProfile(Guid userId)
         {
             AppServiceResult<UserInfoResponseDto> result = await _appUserRepository.GetProfile(userId);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<UserInfoResponseDto>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpPut("profiles")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_MEMBER, ROLE_ADMIN")]
         public async Task<IActionResult> SaveProfile(UserInfoRequestDto userInfo)
         {
             var result = await _appUserRepository.SaveProfile(userInfo);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpPut("password")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_MEMBER, ROLE_ADMIN")]
         public async Task<IActionResult> ChangePassword(ChangePassword changePassword)
         {
             var result = await _appUserRepository.ChangePassword(changePassword);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpPost("upload-profile-image")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_MEMBER, ROLE_ADMIN")]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             var result = await _appUserRepository.UploadImage(file);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpPost("update-status")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_ADMIN")]
         public async Task<IActionResult> UpdateStatus(UserStatusDto userStatus)
         {
             var result = await _appUserRepository.UpdateActive(userStatus);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpGet("list")]
-        [Authorize]
+        [Authorize(Roles = "ROLE_ADMIN")]
         public async Task<IActionResult> GetUsers()
         {
             var result = await _appUserRepository.GetUserList();
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<List<AppUserForAdminDto>>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
     }
 }

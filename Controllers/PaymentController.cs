@@ -6,6 +6,7 @@ using PayPal;
 using PayPal.Api;
 using PetStoreApi.Domain;
 using PetStoreApi.DTO.MomoDTO;
+using PetStoreApi.DTO.ResponseDTO;
 using PetStoreApi.Services;
 using System.Collections.Specialized;
 using System.Text;
@@ -66,7 +67,7 @@ namespace PetStoreApi.Controllers
 
             AppServiceResult<object> result = await _momoRepository.CreatePaymentMomo(amount, cancelUrl, successUrl + "?orderTrackingNumber=" + orderTrackingNumber);
 
-            return result.success ? Ok(result) : BadRequest(result);
+            return result.success ? Ok(new HttpResponseSuccess<object>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpGet("cancel")]
         public IActionResult CancelPay()
