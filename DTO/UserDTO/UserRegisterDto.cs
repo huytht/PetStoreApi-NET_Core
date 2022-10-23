@@ -8,7 +8,7 @@ namespace PetStoreApi.DTO.UserDTO
     public class UserRegisterDto
     {
         [Required]
-        [MinLength(length: 2, ErrorMessage = "user name should have at least 2 characters")]
+        [MinLength(length: 2, ErrorMessage = "username should have at least 2 characters")]
         public string Username { get; set; }
         [Required]
         [EmailAddress]

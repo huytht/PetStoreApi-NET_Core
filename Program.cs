@@ -13,6 +13,7 @@ using PayPal.Api;
 using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using SendGrid.Extensions.DependencyInjection;
+using Org.BouncyCastle.Crypto.Tls;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,7 @@ builder.Services.AddScoped<ICommonRepository, CommonRepository>();
 builder.Services.AddScoped<IPaypalRepository, PaypalRepository>();
 builder.Services.AddScoped<IMomoRepository, MomoRepository>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 #endregion
 
 var emailConfig = builder.Configuration

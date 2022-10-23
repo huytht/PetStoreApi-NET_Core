@@ -1,10 +1,14 @@
 ﻿using PetStoreApi.Data.Entity;
-using PetStoreApi.DTO.BreedDTO;
+using PetStoreApi.DTO.OriginDTO;
 
 namespace PetStoreApi.Services
 {
     public interface IOriginRepository
     {
-        Origin GetOrigin(int? id);
+        Task<Origin> GetOrigin(int? id);
+        Task<IEnumerable<Origin>> GetAllOriginsAsync();
+        void CreateOrigin(Origin origin);
+        void UpdateOrigin(Origin origin);
+        void DeleteOrigin(Origin origin);
     }
 }

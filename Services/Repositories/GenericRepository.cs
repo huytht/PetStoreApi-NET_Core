@@ -1,4 +1,5 @@
-﻿using PetStoreApi.Helpers;
+﻿using Microsoft.EntityFrameworkCore;
+using PetStoreApi.Helpers;
 using System.Linq.Expressions;
 
 namespace PetStoreApi.Services.Repositories
@@ -10,40 +11,26 @@ namespace PetStoreApi.Services.Repositories
         {
             _context = context;
         }
-
-        public void Add(T entity)
+        public IQueryable<T> FindAll()
         {
-            _context.Set<T>().Add(entity);
+            return this._context.Set<T>().AsNoTracking();
         }
-
-        public void AddRange(IEnumerable<T> entities)
+        public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression)
         {
-            _context.Set<T>().AddRange(entities);
+            return this._context.Set<T>()
+                .Where(expression).AsNoTracking();
         }
-
-        public IEnumerable<T> Find(Expression<Func<T, bool>> expression)
+        public void Create(T entity)
         {
-            return _context.Set<T>().Where(expression);
+            this._context.Set<T>().Add(entity);
         }
-
-        public IEnumerable<T> GetAll()
+        public void Update(T entity)
         {
-            return _context.Set<T>().ToList();
+            this._context.Set<T>().Update(entity);
         }
-
-        public T GetById(int id)
+        public void Delete(T entity)
         {
-            return _context.Set<T>().Find(id);
-        }
-
-        public void Remove(T entity)
-        {
-            _context.Set<T>().Remove(entity);
-        }
-
-        public void RemoveRange(IEnumerable<T> entities)
-        {
-            _context.Set<T>().RemoveRange(entities);
+            this._context.Set<T>().Remove(entity);
         }
     }
 }

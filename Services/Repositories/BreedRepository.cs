@@ -1,39 +1,40 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using java.security.acl;
+using Microsoft.EntityFrameworkCore;
 using PetStoreApi.Data.Entity;
 using PetStoreApi.DTO.BreedDTO;
 using PetStoreApi.Helpers;
 
 namespace PetStoreApi.Services.Repositories
 {
-    public class BreedRepository : IBreedRepository
+    public class BreedRepository : GenericRepository<Breed>, IBreedRepository
     {
-        private readonly DataContext _context;
-
-        public BreedRepository(DataContext context)
+        public BreedRepository(DataContext context) : base(context)
         {
-            _context = context;
         }
 
-        public Breed GetBreed(int? id)
+        public void CreateBreed(Breed breed)
         {
-            try
-            {
-                Breed? breed = _context.Breeds.AsNoTracking().FirstOrDefault(b => b.Id == id);
-                Console.WriteLine("===========================>" + breed.ToString());
-                if (breed != null)
-                {
-                    return new Breed
-                    {
-                        Id = breed.Id,
-                        Name = breed.Name,
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-            return null;
+            Create(breed);
+        }
+
+        public void DeleteBreed(Breed breed)
+        {
+            Delete(breed);
+        }
+
+        public async Task<IEnumerable<Breed>> GetAllBreedsAsync()
+        {
+            return await FindAll().OrderBy(b => b.Name).ToListAsync();
+        }
+
+        public void UpdateBreed(Breed breed)
+        {
+            Update(breed);
+        }
+
+        public async Task<Breed> GetBreed(int? id)
+        {
+            return await FindByCondition(b => b.Id.Equals(id)).FirstOrDefaultAsync();
         }
     }
 }

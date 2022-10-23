@@ -4,35 +4,37 @@ using PetStoreApi.Helpers;
 
 namespace PetStoreApi.Services.Repositories
 {
-    public class CategoryRepository : ICategoryRepository
+    public class CategoryRepository : GenericRepository<Category>, ICategoryRepository
     {
         private readonly DataContext _context;
 
-        public CategoryRepository(DataContext context)
+        public CategoryRepository(DataContext context) : base(context)
         {
-            _context = context;
         }
 
-        public Category GetCategory(int? id)
+        public void CreateCategory(Category category)
         {
-            try
-            {
-                var category = _context.Categories.AsNoTracking().FirstOrDefault(c => c.Id == id);
-                if (category != null)
-                {
-                    return new Category
-                    {
-                        Id = category.Id,
-                        Name = category.Name,
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return null;
-            }
-            return null;
+            Create(category);
+        }
+
+        public void DeleteCategory(Category category)
+        {
+            Delete(category);
+        }
+
+        public async Task<IEnumerable<Category>> GetAllCategoriesAsync()
+        {
+            return await FindAll().OrderBy(b => b.Name).ToListAsync();
+        }
+
+        public void UpdateCategory(Category category)
+        {
+            Update(category);
+        }
+
+        public async Task<Category> GetCategory(int? id)
+        {
+            return await FindByCondition(b => b.Id.Equals(id)).FirstOrDefaultAsync();
         }
     }
 }
