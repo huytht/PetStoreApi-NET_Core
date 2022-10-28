@@ -42,7 +42,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.AmountInStock = src.AmountInStock;
             dto.Price = src.Price;
             if (src.AppUserProducts.Count > 0)
-                dto.Favourite = src.AppUserProducts.FirstOrDefault(a => a.ProductId == src.Id && a.UserId == userId).Favourite;
+                dto.Favourite = src.AppUserProducts.FirstOrDefault(a => a.ProductId == src.Id && a.UserId == userId)?.Favourite;
             else
                 dto.Favourite = false;
             dto.Rate = src.Rate;
