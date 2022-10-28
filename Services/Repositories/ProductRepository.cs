@@ -133,7 +133,7 @@ namespace PetStoreApi.Services.Repositories
 
                 IEnumerable<Product> suggestionList = _context.Products.Include("ProductImages").Include("AppUserProducts").Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
 
-                ProductDto result = ProductDto.CreateFromEntity(product, appUser == null ? suggestionList.Select(product => ProductShortDto.CreateFromEntity(product)) : suggestionList.Select(product => ProductShortDto.CreateFromEntity(product, appUser.Id)));
+                ProductDto result = appUser == null ?  ProductDto.CreateFromEntity(product, appUser == null ? suggestionList.Select(product => ProductShortDto.CreateFromEntity(product)) : suggestionList.Select(product => ProductShortDto.CreateFromEntity(product, appUser.Id))) : ProductDto.CreateFromEntity(product, appUser == null ? suggestionList.Select(product => ProductShortDto.CreateFromEntity(product)) : suggestionList.Select(product => ProductShortDto.CreateFromEntity(product, appUser.Id)), appUser.Id);
 
                 return new AppServiceResult<ProductDto>(true, 0, "Succeed!", result);
             }
