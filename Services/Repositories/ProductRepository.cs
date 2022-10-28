@@ -129,7 +129,7 @@ namespace PetStoreApi.Services.Repositories
                 var currentUsername = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
                 
                 var appUser = currentUsername != null ? _context.AppUsers.FirstOrDefault(u => u.Username.Equals(currentUsername.Value)) : null;
-                var product = _context.Products.Include("Breed").Include("Category").Include("ProductImages").Include("ProductOrigins").Include("ProductOrigins.Origin").OrderBy(product => product.Id).SingleOrDefault(product => product.Id.Equals(id));
+                var product = _context.Products.Include("Breed").Include("Category").Include("ProductImages").Include("ProductOrigins").Include("ProductOrigins.Origin").Include("AppUserProducts").OrderBy(product => product.Id).SingleOrDefault(product => product.Id.Equals(id));
 
                 IEnumerable<Product> suggestionList = _context.Products.Include("ProductImages").Include("AppUserProducts").Where(p => (p.BreedId.Equals(product.BreedId) || p.CategoryId.Equals(product.CategoryId)) && !p.Id.Equals(product.Id)).Take(8);
 
