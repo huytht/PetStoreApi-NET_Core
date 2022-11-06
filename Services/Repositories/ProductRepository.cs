@@ -351,9 +351,13 @@ namespace PetStoreApi.Services.Repositories
                 AppUserProduct newRemark = new AppUserProduct();
                 newRemark.ProductId = remarkProduct.ProductId;
                 newRemark.UserId = appUser.Id;
+                DateTime utcTime = DateTime.UtcNow;
+                var tz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+                var tzTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, tz);
                 if (existRemark != null)
                 {
                     newRemark = existRemark;
+                    newRemark.DateModified = tzTime;
                     newRemark.Rate = remarkProduct.Rate;
                     newRemark.Remark = remarkProduct.Remark;
                 }
@@ -363,6 +367,7 @@ namespace PetStoreApi.Services.Repositories
                     newRemark.Product = product;
                     newRemark.Rate = remarkProduct.Rate;
                     newRemark.Remark = remarkProduct.Remark;
+                    newRemark.DateModified = tzTime;
                     await _context.AppUserProducts.AddAsync(newRemark);
                 }
 
@@ -382,7 +387,7 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
-                IEnumerable<RemarkProductDto> remarks = _context.AppUserProducts.Where(r => r.ProductId.Equals(productId)).Include("Product").Include("AppUser").Include("AppUser.UserInfo").OrderByDescending(r => r.DateModified).Select(r => RemarkProductDto.CreateFromEntity(r));
+                IEnumerable<RemarkProductDto> remarks = _context.AppUserProducts.Where(r => r.ProductId.Equals(productId) && r.Remark != null).Include("Product").Include("AppUser").Include("AppUser.UserInfo").OrderByDescending(r => r.DateModified).Select(r => RemarkProductDto.CreateFromEntity(r));
 
                 PaginatedList<RemarkProductDto> dtoPage = new PaginatedList<RemarkProductDto>(remarks, pageParam.PageIndex, pageParam.PageSize);
 

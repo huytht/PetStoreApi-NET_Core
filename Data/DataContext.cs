@@ -207,8 +207,7 @@ namespace PetStoreApi.Helpers
                 entity.ToTable("AppUserProduct");
                 entity.HasKey(e => new { e.ProductId, e.UserId });
                 entity.Property(p => p.DateModified)
-                    .HasComputedColumnSql("dateadd(hour, 7, getutcdate())")
-                    .ValueGeneratedOnAddOrUpdate();
+                    .HasDefaultValueSql("dateadd(hour, 7, getutcdate())");
 
                 entity.HasOne(e => e.Product)
                     .WithMany(e => e.AppUserProducts)

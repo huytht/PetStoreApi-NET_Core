@@ -18,6 +18,7 @@ namespace PetStoreApi.DTO.ProductDTO
         public string? Description { get; set; }
         public bool? Gender { get; set; }
         public bool? Favourite { get; set; }
+        public int? Rate { get; set; }
         public double Price { get; set; }
         public bool? Status { get; set; }
         public BreedDto Breed { get; set; }
@@ -37,6 +38,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.Description = src.Description;
             dto.Status = src.Status;
             dto.Gender = src.Gender;
+            dto.Rate = src.Rate;
             dto.Price = src.Price;
             dto.Favourite = false;
             if (src.Category != null)
@@ -77,6 +79,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.Description = src.Description;
             dto.Status = src.Status;
             dto.Price = src.Price;
+            dto.Rate = src.Rate;
             dto.Favourite = false;
             dto.Gender = src.Gender;
             if (src.Category != null)
@@ -125,6 +128,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.Description = src.Description;
             dto.Status = src.Status;
             dto.Price = src.Price;
+            dto.Rate = src.Rate;
             dto.Gender = src.Gender;
             if (src.Category != null)
                 dto.Category = CategoryDto.CreateFromEntity(src.Category);

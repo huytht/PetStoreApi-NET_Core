@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="DTO\ProductDTO\ProductDto.cs~RF3654416d.TMP" />
     <None Remove="Templates\VerifyEmail.html" />
   </ItemGroup>
 
