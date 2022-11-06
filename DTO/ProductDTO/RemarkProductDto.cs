@@ -7,7 +7,7 @@ namespace PetStoreApi.DTO.ProductDTO
         public Guid ProductId { get; set; }
         public string Remark { get; set; }
         public int Rate { get; set; }
-
+        public string AvatarImg { get; set; }
         public bool? Favourite { get; set; }
         public DateTime? Date { get; set; }
         public string Username { get; set; }
@@ -20,6 +20,7 @@ namespace PetStoreApi.DTO.ProductDTO
             dto.Favourite = src.Favourite;
             dto.Date = src.DateModified;
             dto.Username = src.AppUser.Username;
+            dto.AvatarImg = src.AppUser.UserInfo.AvatarImg;
 
             return dto;
         }

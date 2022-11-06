@@ -382,7 +382,7 @@ namespace PetStoreApi.Services.Repositories
         {
             try
             {
-                IEnumerable<RemarkProductDto> remarks = _context.AppUserProducts.Where(r => r.ProductId.Equals(productId)).Include("Product").Include("AppUser").OrderByDescending(r => r.DateModified).Select(r => RemarkProductDto.CreateFromEntity(r));
+                IEnumerable<RemarkProductDto> remarks = _context.AppUserProducts.Where(r => r.ProductId.Equals(productId)).Include("Product").Include("AppUser").Include("AppUser.UserInfo").OrderByDescending(r => r.DateModified).Select(r => RemarkProductDto.CreateFromEntity(r));
 
                 PaginatedList<RemarkProductDto> dtoPage = new PaginatedList<RemarkProductDto>(remarks, pageParam.PageIndex, pageParam.PageSize);
 
