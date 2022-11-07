@@ -66,7 +66,6 @@ namespace PetStoreApi.Controllers
             return result.success ? Ok(new HttpResponseSuccess<Product>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpGet("remark")]
-        [Authorize(Roles = "ROLE_MEMBER, ROLE_ADMIN")]
         public IActionResult GetRemarkList(Guid productId, int pageNumber = PaginationConstant.PAGE_NUMBER_DEFAULT, int pageSize = PaginationConstant.PAGE_SIZE_DEFAULT)
         {
             PageParam pageParam = new PageParam(pageNumber, pageSize);
