@@ -19,7 +19,7 @@ namespace PetStoreApi.DTO.ProductDTO
             RemarkProductDto dto = new RemarkProductDto();
 
             dto.ProductId = src.Product.Id;
-            dto.Rate = src.Product.Rate;
+            dto.Rate = src.Rate;
             dto.Remark = src.Remark;
             dto.Favourite = src.Favourite;
             dto.Date = src.DateModified;
