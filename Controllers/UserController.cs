@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using PetStoreApi.Constants;
 using PetStoreApi.Domain;
 using PetStoreApi.DTO.OrderDTO;
@@ -7,7 +8,9 @@ using PetStoreApi.DTO.ResponseDTO;
 using PetStoreApi.DTO.UserDTO;
 using PetStoreApi.DTO.UserInfoDTO;
 using PetStoreApi.Services;
+using System.Net;
 using System.Security.Claims;
+using System.Text;
 
 namespace PetStoreApi.Controllers
 {
@@ -17,18 +20,24 @@ namespace PetStoreApi.Controllers
     {
         private readonly IAppUserRepository _appUserRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly IWebHostEnvironment _hostingEnvironment;
+        private readonly Variable _options;
 
-        public UserController(IAppUserRepository appUserRepository, IOrderRepository orderRepository)
+        public UserController(IAppUserRepository appUserRepository, IOrderRepository orderRepository, IWebHostEnvironment hostingEnvironment, IOptions<Variable> options)
         {
             _appUserRepository = appUserRepository;
             _orderRepository = orderRepository;
+            _hostingEnvironment = hostingEnvironment;
+            _options = options.Value;
         }
         [HttpGet("verify/{token}")]
         public async Task<IActionResult> VerifyEmail(string token)
         {
             AppBaseResult result = await _appUserRepository.VerifyEmail(token);
 
-            return result.success ? Ok(new HttpResponseSuccess<string>("Succeed!")) : BadRequest(new HttpResponseError(null, result.message));
+            string tempateFilePath = _hostingEnvironment.ContentRootPath + (result.success ? "/Templates/verify-success.html" : "/Templates/verify-failed.html");
+
+            return Content(System.IO.File.ReadAllText(tempateFilePath).Replace("HOME_PAGE_CLIENT_URL", _options.HomePageClient), "text/html", Encoding.UTF8);
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]UserLoginDto userLogin)

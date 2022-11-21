@@ -218,11 +218,11 @@ namespace PetStoreApi.Services.Repositories
                 user.Password = BC.HashPassword(userRegister.Password);
 
                 await _context.AppUsers.AddAsync(user);
-                await _context.SaveChangesAsync();
+                //await _context.SaveChangesAsync();
 
-                //Message message = new Message(user.Email, "Send Email Verify", null, null, user);
+                Message message = new Message(user.Email, "Send Email Verify", null, null, user);
 
-                //_emailSender.SendEmailAsync(message);
+                await _emailSender.SendEmailAsync(message);
 
                 return AppBaseResult.GenarateIsSucceed();
             }
