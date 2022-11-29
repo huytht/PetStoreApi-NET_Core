@@ -74,7 +74,7 @@ namespace PetStoreApi.Helpers
                 entity.ToTable("Order");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.OrderDate).HasDefaultValueSql("dateadd(hour, 7, getutcdate())");
-                entity.Property(e => e.Reciever).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Receiver).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Address).IsRequired();
 
                 entity.HasOne(o => o.AppUser)

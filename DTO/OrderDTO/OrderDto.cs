@@ -9,7 +9,7 @@ namespace PetStoreApi.DTO.OrderDTO
         public Guid Id { get; set; }
         public double TotalPrice { get; set; }
         public int TotalQuantity { get; set; }
-        public string Reciever { get; set; }
+        public string Receiver { get; set; }
         public string Address { get; set; }
         public string Phone { get; set; }
         public DateTime OrderDate { get; set; }
@@ -25,7 +25,7 @@ namespace PetStoreApi.DTO.OrderDTO
             dto.OrderDate = src.OrderDate;
             dto.TotalPrice = src.TotalPrice;
             dto.TotalQuantity = src.TotalQuantity;
-            dto.Reciever = src.Reciever;
+            dto.Receiver = src.Receiver;
             dto.Phone = src.Phone;
             dto.OrderStatus = OrderStatusDto.CreateFromEntity(src.OrderStatus);
             dto.PaymentId = src.PaymentId;

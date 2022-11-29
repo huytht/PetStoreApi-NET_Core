@@ -50,7 +50,7 @@ namespace PetStoreApi.Services.Repositories
                 order.OrderDate = DateTime.UtcNow;
                 order.TotalPrice = orderCheckout.TotalPrice;
                 order.TotalQuantity = orderCheckout.TotalQuantity;
-                order.Reciever = orderCheckout.Reciever;
+                order.Receiver = orderCheckout.Receiver;
                 order.Phone = orderCheckout.Phone;
 
                 // get address

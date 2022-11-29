@@ -28,8 +28,6 @@ namespace PetStoreApi.Domain
             this.PageInfo.HasPrevious = pageIndex > 1;
             this.PageInfo.IsFirst = pageIndex == 1;
             this.PageInfo.IsLast = pageIndex == pageSize;
-
-            //return new PaginatedList<T>(items, count, pageIndex, pageSize);
         }
     }
 }
