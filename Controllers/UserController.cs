@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using com.sun.xml.@internal.bind.v2.model.core;
+using CsvHelper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PetStoreApi.Constants;
 using PetStoreApi.Domain;
@@ -7,6 +10,7 @@ using PetStoreApi.DTO.OrderDTO;
 using PetStoreApi.DTO.ResponseDTO;
 using PetStoreApi.DTO.UserDTO;
 using PetStoreApi.DTO.UserInfoDTO;
+using PetStoreApi.Helpers;
 using PetStoreApi.Services;
 using System.Net;
 using System.Security.Claims;
@@ -18,17 +22,43 @@ namespace PetStoreApi.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
+        private readonly DataContext _context;
         private readonly IAppUserRepository _appUserRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly Variable _options;
 
-        public UserController(IAppUserRepository appUserRepository, IOrderRepository orderRepository, IWebHostEnvironment hostingEnvironment, IOptions<Variable> options)
+        public UserController(IAppUserRepository appUserRepository, IOrderRepository orderRepository, IWebHostEnvironment hostingEnvironment, IOptions<Variable> options, DataContext context)
         {
+            _context = context;
             _appUserRepository = appUserRepository;
             _orderRepository = orderRepository;
             _hostingEnvironment = hostingEnvironment;
             _options = options.Value;
+        }
+        [HttpGet("export")]
+        [Authorize(Roles = "ROLE_ADMIN")]
+        public IActionResult exportToCSV()
+        {
+            var userList = _context.AppUsers.Include("UserInfo").ToList().Select(user =>
+               new ReportCSVModel()
+               {
+                   UserId = user.Id,
+                   Email = user.Email,
+                   FullName = user.UserInfo.LastName + " " + user.UserInfo.FirstName 
+               }
+           );
+
+            List<ReportCSVModel> reportCSVModel = userList.ToList();
+
+            var stream = new MemoryStream();
+            using (var writeFile = new StreamWriter(stream, leaveOpen: true))
+            {
+                var csv = new CsvWriter(writeFile, true);
+                csv.WriteRecords(reportCSVModel);
+            }
+            stream.Position = 0; //reset stream
+            return File(stream, "application/octet-stream", "Reports.csv");
         }
         [HttpGet("verify/{token}")]
         public async Task<IActionResult> VerifyEmail(string token)
