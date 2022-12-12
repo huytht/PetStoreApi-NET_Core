@@ -33,6 +33,7 @@ namespace PetStoreApi.Services.Repositories
                 if (order != null)
                 {
                     _context.Orders.Remove(order);
+                    _context.SaveChanges();
                     return AppBaseResult.GenarateIsSucceed();
                 } else
                 {
