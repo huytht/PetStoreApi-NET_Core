@@ -42,6 +42,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ModelValidationAttribute>();
 builder.Services.AddScoped<APIContext>();
+builder.Services.AddHttpContextAccessor();
 builder.Logging.AddJsonConsole();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();

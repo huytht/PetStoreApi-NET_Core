@@ -14,16 +14,18 @@ namespace PetStoreApi.Services.Repositories
     {
         private readonly EmailConfiguration _emailConfig;
         private readonly IWebHostEnvironment _hostingEnvironment;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<EmailSender> _logger;
         private readonly DataContext _dataContext;
         private bool _isSuccess;
 
-        public EmailSender(EmailConfiguration emailConfig, IWebHostEnvironment hostingEnvironment, ILogger<EmailSender> logger, DataContext dataContext)
+        public EmailSender(EmailConfiguration emailConfig, IWebHostEnvironment hostingEnvironment, ILogger<EmailSender> logger, DataContext dataContext, IHttpContextAccessor httpContextAccessor)
         {
             _emailConfig = emailConfig;
             _hostingEnvironment = hostingEnvironment;
             _logger = logger;
             _dataContext = dataContext;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task SendEmailAsync(Message message)
@@ -74,7 +76,8 @@ namespace PetStoreApi.Services.Repositories
             emailMessage.IsBodyHtml = true;
 
             string tempateFilePath = _hostingEnvironment.ContentRootPath + "/Templates/VerifyEmail.html";
-            var bodyBuilder = new BodyBuilder { HtmlBody = File.ReadAllText(tempateFilePath).Replace("VERIFICATION_URL", string.Format("https://localhost:7277/api/user/verify/{0}", message.Token)) };
+            string host = _httpContextAccessor.HttpContext.Request.Host.Value;
+            var bodyBuilder = new BodyBuilder { HtmlBody = File.ReadAllText(tempateFilePath).Replace("VERIFICATION_URL", string.Format("https://{0}/api/user/verify/{1}", host, message.Token)) };
 
             emailMessage.Body = bodyBuilder.HtmlBody;
             return emailMessage;
