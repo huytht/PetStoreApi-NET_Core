@@ -8,6 +8,6 @@ namespace PetStoreApi.Services
     public interface IEmailSender
     {
         Task SendEmailAsync(Message message);
-        Task SendAsync(SendGridMessage mailMessage);
+        Task SendAsync(MailMessage mailMessage);
     }
 }
