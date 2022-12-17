@@ -15,12 +15,14 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using PetStoreApi.DTO.UserInfoDTO;
 using System.Security.Claims;
+using PetStoreApi.Configuration;
 
 namespace PetStoreApi.Services.Repositories
 {
     public class AppUserRepository : IAppUserRepository
     {
         private readonly DataContext _context;
+        private readonly EmailConfiguration _emailConfig;
         private readonly ILogger<AppUserRepository> _logger;
         private readonly IMapper _mapper;
         private readonly IJwtProvider _jwtProvider;
@@ -29,7 +31,7 @@ namespace PetStoreApi.Services.Repositories
         private readonly IHttpContextAccessor? _httpContextAccessor;
         private readonly IFileRepository _fileRepository;
 
-        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor, IEmailSender emailSender, IHttpContextAccessor? httpContextAccessor, IFileRepository fileRepository)
+        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor, IEmailSender emailSender, IHttpContextAccessor? httpContextAccessor, IFileRepository fileRepository, EmailConfiguration emailConfig)
         {
             _context = context;
             _logger = logger;
@@ -39,6 +41,7 @@ namespace PetStoreApi.Services.Repositories
             _emailSender = emailSender;
             _httpContextAccessor = httpContextAccessor;
             _fileRepository = fileRepository;
+            _emailConfig = emailConfig
         }
 
         public async Task<AppBaseResult> ChangePassword(ChangePassword changePassword)
@@ -228,8 +231,7 @@ namespace PetStoreApi.Services.Repositories
             }
             catch (Exception e)
             {
-                //_logger.LogError(e.Message);
-                _logger.LogError(e.InnerException.StackTrace);
+                _logger.LogError(e.Message);
                 return AppBaseResult.GenarateIsFailed(99, "Unknown");
             }
         }
