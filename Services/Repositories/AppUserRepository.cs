@@ -22,7 +22,6 @@ namespace PetStoreApi.Services.Repositories
     public class AppUserRepository : IAppUserRepository
     {
         private readonly DataContext _context;
-        private readonly EmailConfiguration _emailConfig;
         private readonly ILogger<AppUserRepository> _logger;
         private readonly IMapper _mapper;
         private readonly IJwtProvider _jwtProvider;
@@ -31,7 +30,7 @@ namespace PetStoreApi.Services.Repositories
         private readonly IHttpContextAccessor? _httpContextAccessor;
         private readonly IFileRepository _fileRepository;
 
-        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor, IEmailSender emailSender, IHttpContextAccessor? httpContextAccessor, IFileRepository fileRepository, EmailConfiguration emailConfig)
+        public AppUserRepository(DataContext context, ILogger<AppUserRepository> logger, IMapper mapper, IJwtProvider jwtProvider, IOptionsMonitor<AppSetting> optionsMonitor, IEmailSender emailSender, IHttpContextAccessor? httpContextAccessor, IFileRepository fileRepository)
         {
             _context = context;
             _logger = logger;
@@ -41,7 +40,6 @@ namespace PetStoreApi.Services.Repositories
             _emailSender = emailSender;
             _httpContextAccessor = httpContextAccessor;
             _fileRepository = fileRepository;
-            _emailConfig = emailConfig
         }
 
         public async Task<AppBaseResult> ChangePassword(ChangePassword changePassword)
