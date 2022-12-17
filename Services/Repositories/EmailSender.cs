@@ -7,6 +7,7 @@ using SendGrid.Helpers.Mail;
 using System.Net.Mail;
 using MailKit.Security;
 using System.Net;
+using SendGrid;
 
 namespace PetStoreApi.Services.Repositories
 {
@@ -47,18 +48,27 @@ namespace PetStoreApi.Services.Repositories
             await _dataContext.SaveChangesAsync();
 
         }
-        public async Task SendAsync(MailMessage mailMessage)
+        public async Task SendAsync(SendGridMessage mailMessage)
         {
             try
             {
-                SmtpClient smtp = new SmtpClient(_emailConfig.SmtpServer, _emailConfig.Port);
-                smtp.EnableSsl = true;
-                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                smtp.UseDefaultCredentials = false;
-                smtp.Credentials = new NetworkCredential(_emailConfig.UserName, _emailConfig.Password);
-                smtp.Send(mailMessage);
+                //SmtpClient smtp = new SmtpClient(_emailConfig.SmtpServer, _emailConfig.Port);
+                //smtp.EnableSsl = true;
+                //smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                //smtp.UseDefaultCredentials = false;
+                //smtp.Credentials = new NetworkCredential(_emailConfig.UserName, _emailConfig.Password);
+                //smtp.Send(mailMessage);
+                var client = new SendGridClient(_emailConfig.APIKey);
+                var response = await client.SendEmailAsync(mailMessage);
 
-                _isSuccess = true;
+                if (response.IsSuccessStatusCode)
+                {
+                    _isSuccess = true;
+                }
+                else
+                {
+                    _isSuccess = false;
+                }
             }
             catch (Exception e)
             {
@@ -66,20 +76,25 @@ namespace PetStoreApi.Services.Repositories
                 _isSuccess = false;
             }
         }
-        private MailMessage CreateEmailMessage(Message message)
+        private SendGridMessage CreateEmailMessage(Message message)
         {
-
-            var emailMessage = new MailMessage();
-            emailMessage.From = new MailAddress(_emailConfig.From);
-            emailMessage.To.Add(new MailAddress(message.To));
-            emailMessage.Subject = message.Subject;
-            emailMessage.IsBodyHtml = true;
-
+            //var emailMessage = new MailMessage();
+            //emailMessage.From = new MailAddress(_emailConfig.From);
+            //emailMessage.To.Add(new MailAddress(message.To));
+            //emailMessage.Subject = message.Subject;
+            //emailMessage.IsBodyHtml = true;
+           
             string tempateFilePath = _hostingEnvironment.ContentRootPath + "/Templates/VerifyEmail.html";
             string host = _httpContextAccessor.HttpContext.Request.Host.Value;
             var bodyBuilder = new BodyBuilder { HtmlBody = File.ReadAllText(tempateFilePath).Replace("VERIFICATION_URL", string.Format("https://{0}/api/user/verify/{1}", host, message.Token)) };
-
-            emailMessage.Body = bodyBuilder.HtmlBody;
+            var emailMessage = new SendGridMessage()
+            {
+                From = new EmailAddress(_emailConfig.From, _emailConfig.From),
+                Subject = "Sending email verify account",
+                HtmlContent = bodyBuilder.HtmlBody
+            };
+            emailMessage.AddTo(new EmailAddress(message.To));
+            //emailMessage.Body = bodyBuilder.HtmlBody;
             return emailMessage;
         }
 
