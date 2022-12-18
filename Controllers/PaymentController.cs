@@ -67,7 +67,7 @@ namespace PetStoreApi.Controllers
 
             AppServiceResult<object> result = await _momoRepository.CreatePaymentMomo(amount, cancelUrl, successUrl + "?orderTrackingNumber=" + orderTrackingNumber);
 
-            return result.success ? Ok(new HttpResponseSuccess<object>(result.data)) : BadRequest(new HttpResponseError(null, result.message));
+            return result.success ? Ok(result.data) : BadRequest(new HttpResponseError(null, result.message));
         }
         [HttpGet("cancel")]
         public IActionResult CancelPay()
